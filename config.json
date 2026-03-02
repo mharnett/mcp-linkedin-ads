@@ -1,0 +1,29 @@
+{
+  "oauth": {
+    "client_id": "",
+    "client_secret": "",
+    "token_url": "https://www.linkedin.com/oauth/v2/accessToken",
+    "scope": "r_ads,rw_ads,w_member_social,r_organization_social,w_organization_social"
+  },
+  "api": {
+    "base_url": "https://api.linkedin.com/rest",
+    "version": "202504"
+  },
+  "clients": {
+    "forcepoint": {
+      "account_id": "511664399",
+      "name": "Forcepoint",
+      "folder": "/Users/mark/claude-code/forcepoint"
+    },
+    "flowspace": {
+      "account_id": "512997829",
+      "name": "Flowspace Ads",
+      "folder": "/Users/mark/claude-code/Flowspace"
+    },
+    "neon-one": {
+      "account_id": "508464347",
+      "name": "Neon One Ads",
+      "folder": "/Users/mark/claude-code/neon-one"
+    }
+  }
+}
