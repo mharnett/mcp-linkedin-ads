@@ -10,6 +10,15 @@ import {
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 
+// Log build fingerprint at startup
+try {
+  const __buildInfoDir = dirname(new URL(import.meta.url).pathname);
+  const buildInfo = JSON.parse(readFileSync(join(__buildInfoDir, "build-info.json"), "utf-8"));
+  console.error(`[build] SHA: ${buildInfo.sha} (${buildInfo.builtAt})`);
+} catch {
+  // build-info.json not present (dev mode)
+}
+
 // ============================================
 // CONFIGURATION
 // ============================================
