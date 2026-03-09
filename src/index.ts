@@ -9,6 +9,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
+import { execSync } from "child_process";
 
 // Log build fingerprint at startup
 try {
@@ -65,6 +66,82 @@ function getClientFromWorkingDir(config: Config, cwd: string): ClientConfig | nu
 }
 
 // ============================================
+// TYPED ERRORS (mirrors motion-mcp / bing-ads pattern)
+// ============================================
+
+class LinkedInAdsAuthError extends Error {
+  constructor(message: string, public readonly cause?: unknown) {
+    super(message);
+    this.name = "LinkedInAdsAuthError";
+  }
+}
+
+class LinkedInAdsRateLimitError extends Error {
+  constructor(
+    public readonly retryAfterMs: number,
+    cause?: unknown,
+  ) {
+    super(`Rate limited, retry after ${retryAfterMs}ms`);
+    this.name = "LinkedInAdsRateLimitError";
+    this.cause = cause;
+  }
+}
+
+class LinkedInAdsServiceError extends Error {
+  constructor(message: string, public readonly cause?: unknown) {
+    super(message);
+    this.name = "LinkedInAdsServiceError";
+  }
+}
+
+// ============================================
+// STARTUP CREDENTIAL VALIDATION
+// ============================================
+
+function validateCredentials(): { valid: boolean; missing: string[] } {
+  // Need either an access token OR (refresh token + client credentials)
+  const hasAccessToken = !!process.env.LINKEDIN_ADS_ACCESS_TOKEN?.trim();
+  const hasRefreshToken = !!process.env.LINKEDIN_ADS_REFRESH_TOKEN?.trim();
+  if (hasAccessToken || hasRefreshToken) {
+    return { valid: true, missing: [] };
+  }
+  return {
+    valid: false,
+    missing: ["LINKEDIN_ADS_ACCESS_TOKEN or LINKEDIN_ADS_REFRESH_TOKEN"],
+  };
+}
+
+function classifyError(error: any): Error {
+  const message = error?.message || String(error);
+  const status = error?.status;
+
+  if (
+    status === 401 ||
+    status === 403 ||
+    message.includes("invalid_grant") ||
+    message.includes("OAuth token refresh failed") ||
+    message.includes("expired") ||
+    message.includes("InvalidAccessToken")
+  ) {
+    return new LinkedInAdsAuthError(
+      `Auth failed: ${message}. Token may be expired. Re-authenticate and update Keychain.`,
+      error,
+    );
+  }
+
+  if (status === 429 || message.includes("throttle") || message.includes("rate")) {
+    const retryMs = 60_000;
+    return new LinkedInAdsRateLimitError(retryMs, error);
+  }
+
+  if (status >= 500 || message.includes("ServiceUnavailable")) {
+    return new LinkedInAdsServiceError(`LinkedIn API server error: ${message}`, error);
+  }
+
+  return error;
+}
+
+// ============================================
 // LINKEDIN MARKETING API CLIENT
 // ============================================
 
@@ -76,6 +153,16 @@ class LinkedInAdsManager {
 
   constructor(config: Config) {
     this.config = config;
+
+    // Validate credentials at startup — fail fast
+    const creds = validateCredentials();
+    if (!creds.valid) {
+      const msg = `[STARTUP ERROR] Missing required credentials: ${creds.missing.join(", ")}. Check run-mcp.sh and Keychain entries.`;
+      console.error(msg);
+      throw new LinkedInAdsAuthError(msg);
+    }
+    console.error("[startup] Credentials validated: token env vars present");
+
     this.refreshToken = process.env.LINKEDIN_ADS_REFRESH_TOKEN || "";
 
     if (process.env.LINKEDIN_ADS_CLIENT_ID) {
@@ -103,7 +190,7 @@ class LinkedInAdsManager {
         // Token might be expired but try it anyway
         return this.accessToken;
       }
-      throw new Error("No access token or refresh token available. Run oauth_flow.py to get a new token.");
+      throw new LinkedInAdsAuthError("No access token or refresh token available. Run oauth_flow.py to get a new token.");
     }
 
     const params = new URLSearchParams({
@@ -121,15 +208,26 @@ class LinkedInAdsManager {
 
     if (!resp.ok) {
       const text = await resp.text();
-      throw new Error(`OAuth token refresh failed: ${resp.status} ${text}`);
+      const error = new Error(`OAuth token refresh failed: ${resp.status} ${text}`);
+      throw classifyError(error);
     }
 
     const data = await resp.json() as any;
     this.accessToken = data.access_token;
     this.tokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
 
-    if (data.refresh_token) {
+    // Persist rotated refresh token to Keychain so restarts use the latest
+    if (data.refresh_token && data.refresh_token !== this.refreshToken) {
       this.refreshToken = data.refresh_token;
+      try {
+        execSync(
+          `security delete-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN 2>/dev/null; ` +
+          `security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w "${data.refresh_token}"`,
+        );
+        console.error("[token] Rotated refresh token persisted to Keychain");
+      } catch (err) {
+        console.error("[token] WARNING: Failed to persist rotated refresh token to Keychain:", err);
+      }
     }
 
     return this.accessToken!;
@@ -154,7 +252,8 @@ class LinkedInAdsManager {
 
     if (!resp.ok) {
       const text = await resp.text();
-      throw new Error(`LinkedIn API error: ${resp.status} ${text}`);
+      const error = Object.assign(new Error(`LinkedIn API error: ${resp.status} ${text}`), { status: resp.status });
+      throw classifyError(error);
     }
 
     return await resp.json();
@@ -175,7 +274,8 @@ class LinkedInAdsManager {
 
     if (!resp.ok) {
       const text = await resp.text();
-      throw new Error(`LinkedIn API error: ${resp.status} ${text}`);
+      const error = Object.assign(new Error(`LinkedIn API error: ${resp.status} ${text}`), { status: resp.status });
+      throw classifyError(error);
     }
 
     return await resp.json();
@@ -550,12 +650,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         throw new Error(`Unknown tool: ${name}`);
     }
   } catch (error: any) {
+    const classified = classifyError(error);
+    const isAuth = classified instanceof LinkedInAdsAuthError;
     return {
       content: [{
         type: "text",
         text: JSON.stringify({
           error: true,
-          message: error.message,
+          error_type: classified.name,
+          message: classified.message,
+          action_required: isAuth
+            ? "Re-authenticate LinkedIn Ads and update Keychain: security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w <new_token>"
+            : undefined,
           details: error.stack,
         }, null, 2),
       }],
