@@ -10,6 +10,13 @@ import {
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { execSync } from "child_process";
+import {
+  LinkedInAdsAuthError,
+  LinkedInAdsRateLimitError,
+  LinkedInAdsServiceError,
+  classifyError,
+  validateCredentials,
+} from "./errors.js";
 
 // Log build fingerprint at startup
 try {
@@ -63,82 +70,6 @@ function getClientFromWorkingDir(config: Config, cwd: string): ClientConfig | nu
     }
   }
   return null;
-}
-
-// ============================================
-// TYPED ERRORS (mirrors motion-mcp / bing-ads pattern)
-// ============================================
-
-class LinkedInAdsAuthError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
-    super(message);
-    this.name = "LinkedInAdsAuthError";
-  }
-}
-
-class LinkedInAdsRateLimitError extends Error {
-  constructor(
-    public readonly retryAfterMs: number,
-    cause?: unknown,
-  ) {
-    super(`Rate limited, retry after ${retryAfterMs}ms`);
-    this.name = "LinkedInAdsRateLimitError";
-    this.cause = cause;
-  }
-}
-
-class LinkedInAdsServiceError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
-    super(message);
-    this.name = "LinkedInAdsServiceError";
-  }
-}
-
-// ============================================
-// STARTUP CREDENTIAL VALIDATION
-// ============================================
-
-function validateCredentials(): { valid: boolean; missing: string[] } {
-  // Need either an access token OR (refresh token + client credentials)
-  const hasAccessToken = !!process.env.LINKEDIN_ADS_ACCESS_TOKEN?.trim();
-  const hasRefreshToken = !!process.env.LINKEDIN_ADS_REFRESH_TOKEN?.trim();
-  if (hasAccessToken || hasRefreshToken) {
-    return { valid: true, missing: [] };
-  }
-  return {
-    valid: false,
-    missing: ["LINKEDIN_ADS_ACCESS_TOKEN or LINKEDIN_ADS_REFRESH_TOKEN"],
-  };
-}
-
-function classifyError(error: any): Error {
-  const message = error?.message || String(error);
-  const status = error?.status;
-
-  if (
-    status === 401 ||
-    status === 403 ||
-    message.includes("invalid_grant") ||
-    message.includes("OAuth token refresh failed") ||
-    message.includes("expired") ||
-    message.includes("InvalidAccessToken")
-  ) {
-    return new LinkedInAdsAuthError(
-      `Auth failed: ${message}. Token may be expired. Re-authenticate and update Keychain.`,
-      error,
-    );
-  }
-
-  if (status === 429 || message.includes("throttle") || message.includes("rate")) {
-    const retryMs = 60_000;
-    return new LinkedInAdsRateLimitError(retryMs, error);
-  }
-
-  if (status >= 500 || message.includes("ServiceUnavailable")) {
-    return new LinkedInAdsServiceError(`LinkedIn API server error: ${message}`, error);
-  }
-
-  return error;
 }
 
 // ============================================
