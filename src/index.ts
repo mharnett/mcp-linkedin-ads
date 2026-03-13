@@ -17,12 +17,13 @@ import {
   validateCredentials,
 } from "./errors.js";
 import { tools } from "./tools.js";
+import { withResilience, safeResponse, logger } from "./resilience.js";
 
 // Log build fingerprint at startup
 try {
   const __buildInfoDir = dirname(new URL(import.meta.url).pathname);
   const buildInfo = JSON.parse(readFileSync(join(__buildInfoDir, "build-info.json"), "utf-8"));
-  console.error(`[build] SHA: ${buildInfo.sha} (${buildInfo.builtAt})`);
+  logger.info({ sha: buildInfo.sha, builtAt: buildInfo.builtAt }, "Build fingerprint");
 } catch {
   // build-info.json not present (dev mode)
 }
@@ -88,11 +89,11 @@ class LinkedInAdsManager {
     // Validate credentials at startup — fail fast
     const creds = validateCredentials();
     if (!creds.valid) {
-      const msg = `[STARTUP ERROR] Missing required credentials: ${creds.missing.join(", ")}. Check run-mcp.sh and Keychain entries.`;
-      console.error(msg);
+      const msg = `Missing required credentials: ${creds.missing.join(", ")}. Check run-mcp.sh and Keychain entries.`;
+      logger.error({ missing: creds.missing }, msg);
       throw new LinkedInAdsAuthError(msg);
     }
-    console.error("[startup] Credentials validated: token env vars present");
+    logger.info("Credentials validated: token env vars present");
 
     this.refreshToken = process.env.LINKEDIN_ADS_REFRESH_TOKEN || "";
 
@@ -155,9 +156,9 @@ class LinkedInAdsManager {
           `security delete-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN 2>/dev/null; ` +
           `security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w "${data.refresh_token}"`,
         );
-        console.error("[token] Rotated refresh token persisted to Keychain");
+        logger.info("Rotated refresh token persisted to Keychain");
       } catch (err) {
-        console.error("[token] WARNING: Failed to persist rotated refresh token to Keychain:", err);
+        logger.warn({ err }, "Failed to persist rotated refresh token to Keychain");
       }
     }
 
@@ -172,44 +173,50 @@ class LinkedInAdsManager {
       url += (url.includes("?") ? "&" : "?") + qs;
     }
 
-    const resp = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "LinkedIn-Version": this.config.api.version,
-        "X-Restli-Protocol-Version": "2.0.0",
-      },
-    });
+    return withResilience(async () => {
+      const resp = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "LinkedIn-Version": this.config.api.version,
+          "X-Restli-Protocol-Version": "2.0.0",
+        },
+        signal: AbortSignal.timeout(30_000),
+      });
 
-    if (!resp.ok) {
-      const text = await resp.text();
-      const error = Object.assign(new Error(`LinkedIn API error: ${resp.status} ${text}`), { status: resp.status });
-      throw classifyError(error);
-    }
+      if (!resp.ok) {
+        const text = await resp.text();
+        const error = Object.assign(new Error(`LinkedIn API error: ${resp.status} ${text}`), { status: resp.status });
+        throw classifyError(error);
+      }
 
-    return await resp.json();
+      return await resp.json();
+    }, `apiGet:${path}`);
   }
 
   // Raw GET with pre-built URL (for complex Rest.li query params)
   private async apiGetRaw(fullUrl: string): Promise<any> {
     const token = await this.getAccessToken();
 
-    const resp = await fetch(fullUrl, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "LinkedIn-Version": this.config.api.version,
-        "X-Restli-Protocol-Version": "2.0.0",
-      },
-    });
+    return withResilience(async () => {
+      const resp = await fetch(fullUrl, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "LinkedIn-Version": this.config.api.version,
+          "X-Restli-Protocol-Version": "2.0.0",
+        },
+        signal: AbortSignal.timeout(30_000),
+      });
 
-    if (!resp.ok) {
-      const text = await resp.text();
-      const error = Object.assign(new Error(`LinkedIn API error: ${resp.status} ${text}`), { status: resp.status });
-      throw classifyError(error);
-    }
+      if (!resp.ok) {
+        const text = await resp.text();
+        const error = Object.assign(new Error(`LinkedIn API error: ${resp.status} ${text}`), { status: resp.status });
+        throw classifyError(error);
+      }
 
-    return await resp.json();
+      return await resp.json();
+    }, `apiGetRaw:${fullUrl.split("?")[0]}`);
   }
 
   // ============================================
@@ -406,7 +413,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "linkedin_ads_list_accounts": {
         const result = await adsManager.listAccounts();
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "list_accounts"), null, 2) }],
         };
       }
 
@@ -414,7 +421,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const accountId = resolveAccountId(args?.account_id as string);
         const result = await adsManager.listCampaignGroups(accountId);
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "list_campaign_groups"), null, 2) }],
         };
       }
 
@@ -425,7 +432,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           campaignGroupId: args?.campaign_group_id as string,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "list_campaigns"), null, 2) }],
         };
       }
 
@@ -437,7 +444,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           timeGranularity: args?.time_granularity as string,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "campaign_performance"), null, 2) }],
         };
       }
 
@@ -449,7 +456,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           timeGranularity: args?.time_granularity as string,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "account_performance"), null, 2) }],
         };
       }
 
@@ -466,7 +473,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           campaignGroupIds: args?.campaign_group_ids as string[],
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "analytics"), null, 2) }],
         };
       }
 
@@ -498,7 +505,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("MCP LinkedIn Ads server running");
+  logger.info("MCP LinkedIn Ads server running");
 }
 
-main().catch(console.error);
+main().catch((err) => logger.error({ err }, "Server failed to start"));
