@@ -3,7 +3,20 @@
   "version": "1.0.0",
   "description": "MCP server for LinkedIn Campaign Manager API with full campaign, ad group, creative, and targeting support. Production-proven with 65+ campaigns under active management.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "config.example.json"
+  ],
   "scripts": {
     "build": "tsc && node -e \"fs=require('fs');cp=require('child_process');sha=cp.execSync('git rev-parse --short HEAD 2>/dev/null||echo unknown').toString().trim();fs.writeFileSync('dist/build-info.json',JSON.stringify({sha,builtAt:new Date().toISOString()}))\"",
     "start": "node dist/index.js",
@@ -20,16 +33,16 @@
     "automation",
     "claude"
   ],
-  "author": "VS Code AI Team",
+  "author": "drak-marketing",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anthropics/mcp-linkedin-ads"
+    "url": "https://github.com/drak-marketing/mcp-linkedin-ads"
   },
   "bugs": {
-    "url": "https://github.com/anthropics/mcp-linkedin-ads/issues"
+    "url": "https://github.com/drak-marketing/mcp-linkedin-ads/issues"
   },
-  "homepage": "https://github.com/anthropics/mcp-linkedin-ads#readme",
+  "homepage": "https://github.com/drak-marketing/mcp-linkedin-ads#readme",
   "engines": {
     "node": ">=18.0.0"
   },
