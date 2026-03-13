@@ -37,12 +37,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/drak-marketing/mcp-linkedin-ads"
+    "url": "https://github.com/mharnett/mcp-linkedin-ads"
   },
   "bugs": {
-    "url": "https://github.com/drak-marketing/mcp-linkedin-ads/issues"
+    "url": "https://github.com/mharnett/mcp-linkedin-ads/issues"
   },
-  "homepage": "https://github.com/drak-marketing/mcp-linkedin-ads#readme",
+  "homepage": "https://github.com/mharnett/mcp-linkedin-ads#readme",
   "engines": {
     "node": ">=18.0.0"
   },
