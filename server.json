@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mharnett/linkedin-ads",
-  "description": "MCP server for LinkedIn Campaign Manager API — campaigns, ad groups, creatives, targeting, analytics, and UTM management. Production-proven with 65+ campaigns. Built-in resilience with retry, circuit breaker, and response size limiting.",
+  "description": "MCP server for LinkedIn Campaign Manager — campaigns, creatives, and analytics",
   "repository": {
     "url": "https://github.com/mharnett/mcp-linkedin-ads",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "mcp-linkedin-ads",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "transport": {
         "type": "stdio"
       },
