@@ -1,7 +1,7 @@
 {
   "name": "mcp-linkedin-ads",
   "version": "1.0.0",
-  "description": "MCP server for LinkedIn Ads / Campaign Manager API integration with Claude Code",
+  "description": "MCP server for LinkedIn Campaign Manager API with full campaign, ad group, creative, and targeting support. Production-proven with 65+ campaigns under active management.",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
@@ -9,6 +9,29 @@
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "test": "vitest run"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "linkedin",
+    "ads",
+    "campaign-manager",
+    "marketing",
+    "automation",
+    "claude"
+  ],
+  "author": "VS Code AI Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropics/mcp-linkedin-ads"
+  },
+  "bugs": {
+    "url": "https://github.com/anthropics/mcp-linkedin-ads/issues"
+  },
+  "homepage": "https://github.com/anthropics/mcp-linkedin-ads#readme",
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
