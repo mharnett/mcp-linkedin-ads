@@ -1,5 +1,10 @@
 # LinkedIn Ads MCP Server
 
+[![npm version](https://img.shields.io/npm/v/mcp-linkedin-ads)](https://www.npmjs.com/package/mcp-linkedin-ads)
+[![npm downloads](https://img.shields.io/npm/dm/mcp-linkedin-ads)](https://www.npmjs.com/package/mcp-linkedin-ads)
+[![GitHub stars](https://img.shields.io/github/stars/mharnett/mcp-linkedin-ads)](https://github.com/mharnett/mcp-linkedin-ads)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Production-grade MCP server for LinkedIn Campaign Manager API. Enables Claude to manage LinkedIn ad accounts, campaigns, ad sets, and creatives with full read/write support.
 
 **Features:**
@@ -196,8 +201,12 @@ Contributions welcome! Please:
 
 ---
 
-**Maintained by:** VS Code AI team & community contributors
+## Built By
+
+**[Mark Harnett](https://www.linkedin.com/in/markharnett/)** — Demand generation leader and paid media practitioner building AI-powered ad management tools. This server was born from managing 65+ LinkedIn campaigns across multiple clients and wanting Claude to handle campaign ops, performance analysis, and bulk creative updates autonomously.
+
+Built with production workloads in mind: resilient API calls (circuit breakers, retry with backoff, response truncation), accurate CTR calculation (landing page clicks, not total clicks), and multi-account support.
+
+**Also by Mark:** [mcp-bing-ads](https://github.com/mharnett/mcp-bing-ads) — Bing/Microsoft Ads MCP server with 30+ tools.
 
 **Last Updated:** 2026-03-13
-
-**Stability:** Production-ready (65+ campaigns in active management)
