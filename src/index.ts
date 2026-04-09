@@ -48,6 +48,12 @@ if (process.argv.includes("--version") || process.argv.includes("-v")) {
 }
 
 // ============================================
+// ENV VAR TRIMMING
+// ============================================
+
+const envTrimmed = (key: string): string => (process.env[key] || "").trim().replace(/^["']|["']$/g, "");
+
+// ============================================
 // CONFIGURATION
 // ============================================
 
@@ -114,18 +120,18 @@ class LinkedInAdsManager {
     }
     logger.info("Credentials validated: token env vars present");
 
-    this.refreshToken = process.env.LINKEDIN_ADS_REFRESH_TOKEN || "";
+    this.refreshToken = envTrimmed("LINKEDIN_ADS_REFRESH_TOKEN");
 
     if (process.env.LINKEDIN_ADS_CLIENT_ID) {
-      this.config.oauth.client_id = process.env.LINKEDIN_ADS_CLIENT_ID;
+      this.config.oauth.client_id = envTrimmed("LINKEDIN_ADS_CLIENT_ID");
     }
     if (process.env.LINKEDIN_ADS_CLIENT_SECRET) {
-      this.config.oauth.client_secret = process.env.LINKEDIN_ADS_CLIENT_SECRET;
+      this.config.oauth.client_secret = envTrimmed("LINKEDIN_ADS_CLIENT_SECRET");
     }
 
     // Support direct access token (from Keychain, 60-day TTL)
     if (process.env.LINKEDIN_ADS_ACCESS_TOKEN) {
-      this.accessToken = process.env.LINKEDIN_ADS_ACCESS_TOKEN;
+      this.accessToken = envTrimmed("LINKEDIN_ADS_ACCESS_TOKEN");
       this.tokenExpiry = Date.now() + 59 * 24 * 3600 * 1000; // assume ~59 days left
     }
   }
@@ -542,6 +548,10 @@ process.on("SIGINT", () => {
 
 process.on("SIGPIPE", () => {
   // Client disconnected -- expected during shutdown
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[error] Unhandled promise rejection:", reason);
 });
 
 main().catch((err) => logger.error({ err }, "Server failed to start"));
