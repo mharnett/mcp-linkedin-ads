@@ -8,16 +8,15 @@
 Production-grade MCP server for LinkedIn Campaign Manager API. Enables Claude to manage LinkedIn ad accounts, campaigns, ad sets, and creatives with full read/write support.
 
 **Features:**
-- 65+ production-tested tools
+- 7 production-tested tools
 - Multi-account management (multiple LinkedIn ad accounts)
-- Campaign, ad group, creative, and targeting management
-- Targeting: demographics, interests, job titles, locations, behaviors
-- Budget & bid optimization
-- Campaign cloning & templating
-- Safe create/update operations (validation first)
+- Campaign and campaign group listing
+- Account and campaign performance analytics
+- Flexible pivot-based reporting (demographics, device, creative breakdowns)
+- Landing page click-based CTR (not total clicks)
 
 **Stats:**
-- ⭐ Production-proven: 65+ active campaigns under management
+- ⭐ Production-proven: active campaigns under management
 - 📊 Multi-client: Flowspace, Forcepoint, Neon One
 - 🔄 CTR accuracy: Uses `landingPageClicks` (not total clicks with engagement)
 - ✅ Full test coverage: 40+ contract tests
@@ -58,9 +57,9 @@ npm install mcp-linkedin-ads
 
 4. **Set environment variables (recommended for production):**
    ```bash
-   export LINKEDIN_CLIENT_ID="your_client_id"
-   export LINKEDIN_CLIENT_SECRET="your_client_secret"
-   export LINKEDIN_AD_ACCOUNT_ID="your_account_id"
+   export LINKEDIN_ADS_CLIENT_ID="your_client_id"
+   export LINKEDIN_ADS_CLIENT_SECRET="your_client_secret"
+   export LINKEDIN_ADS_ACCESS_TOKEN="your_access_token"
    ```
 
 ## Usage
@@ -86,22 +85,23 @@ Add to `~/.claude.json`:
 ### Example API Calls
 ```typescript
 // Get client context
-get_ads_client_context({ working_directory: "/path/to/project" })
+linkedin_ads_get_client_context({ working_directory: "/path/to/project" })
 
 // List campaigns
-get_campaigns({ account_id: "511664399" })
+linkedin_ads_list_campaigns({ account_id: "511664399" })
 
-// Create campaign
-create_campaign({
-  name: "Q2 B2B Campaign",
-  objective: "LEAD_GENERATION",
-  status: "PAUSED"
+// Get campaign performance
+linkedin_ads_campaign_performance({
+  start_date: "2026-01-01",
+  end_date: "2026-03-31",
+  time_granularity: "MONTHLY"
 })
 
-// Get campaign insights
-get_insights({
-  object_id: "campaign_123",
-  time_range: "last_7d"
+// Flexible analytics (e.g. by seniority)
+linkedin_ads_analytics({
+  start_date: "2026-03-01",
+  end_date: "2026-03-31",
+  pivot: "MEMBER_SENIORITY"
 })
 ```
 
@@ -168,7 +168,7 @@ cp config.example.json config.json
 
 ### `Missing required credentials`
 Check that:
-- `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` are set (or in config.json)
+- `LINKEDIN_ADS_CLIENT_ID` and `LINKEDIN_ADS_CLIENT_SECRET` are set (or in config.json)
 - `config.json` exists and contains at least one client with `account_id`
 - OAuth tokens are valid (they expire)
 
@@ -203,10 +203,10 @@ Contributions welcome! Please:
 
 ## Built By
 
-**[Mark Harnett](https://www.linkedin.com/in/markharnett/)** — Demand generation leader and paid media practitioner building AI-powered ad management tools. This server was born from managing 65+ LinkedIn campaigns across multiple clients and wanting Claude to handle campaign ops, performance analysis, and bulk creative updates autonomously.
+**[Mark Harnett](https://www.linkedin.com/in/markharnett/)** — Demand generation leader and paid media practitioner building AI-powered ad management tools. This server was born from managing LinkedIn campaigns across multiple clients and wanting Claude to handle campaign ops, performance analysis, and bulk creative updates autonomously.
 
 Built with production workloads in mind: resilient API calls (circuit breakers, retry with backoff, response truncation), accurate CTR calculation (landing page clicks, not total clicks), and multi-account support.
 
-**Also by Mark:** [mcp-bing-ads](https://github.com/mharnett/mcp-bing-ads) — Bing/Microsoft Ads MCP server with 30+ tools.
+**Also by Mark:** [mcp-bing-ads](https://github.com/mharnett/mcp-bing-ads) -- Bing/Microsoft Ads MCP server with 10 tools.
 
 **Last Updated:** 2026-03-13
