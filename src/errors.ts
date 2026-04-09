@@ -14,7 +14,7 @@ export class LinkedInAdsRateLimitError extends Error {
     public readonly retryAfterMs: number,
     cause?: unknown,
   ) {
-    super(`Rate limited, retry after ${retryAfterMs}ms`);
+    super(`LinkedIn Ads rate limited, retry after ${retryAfterMs}ms`);
     this.name = "LinkedInAdsRateLimitError";
     this.cause = cause;
   }
@@ -57,7 +57,7 @@ export function classifyError(error: any): Error {
     message.includes("InvalidAccessToken")
   ) {
     return new LinkedInAdsAuthError(
-      `Auth failed: ${message}. Token may be expired. Re-authenticate and update Keychain.`,
+      `LinkedIn Ads auth failed: ${message}. Token may be expired. Re-authenticate and update Keychain.`,
       error,
     );
   }

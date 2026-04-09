@@ -512,19 +512,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const classified = classifyError(error);
     const isAuth = classified instanceof LinkedInAdsAuthError;
     return {
+      isError: true,
       content: [{
         type: "text",
         text: JSON.stringify({
           error: true,
           error_type: classified.name,
           message: classified.message,
+          server: __cliPkg.name,
           action_required: isAuth
             ? "Re-authenticate LinkedIn Ads and update Keychain: security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w <new_token>"
             : undefined,
           details: error.stack,
         }, null, 2),
       }],
-      isError: true,
     };
   }
 });
