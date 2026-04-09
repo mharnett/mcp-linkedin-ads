@@ -36,6 +36,11 @@ export function validateCredentials(): { valid: boolean; missing: string[] } {
   const hasAccessToken = !!process.env.LINKEDIN_ADS_ACCESS_TOKEN?.trim();
   const hasRefreshToken = !!process.env.LINKEDIN_ADS_REFRESH_TOKEN?.trim();
   if (hasAccessToken || hasRefreshToken) {
+    // Basic format validation: token should have reasonable length > 10 chars
+    const token = (process.env.LINKEDIN_ADS_ACCESS_TOKEN || process.env.LINKEDIN_ADS_REFRESH_TOKEN || "").trim();
+    if (token.length > 0 && token.length < 10) {
+      return { valid: false, missing: ["LINKEDIN_ADS token (format: too short, expected length > 10)"] };
+    }
     return { valid: true, missing: [] };
   }
   return {
@@ -47,6 +52,8 @@ export function validateCredentials(): { valid: boolean; missing: string[] } {
 export function classifyError(error: any): Error {
   const message = error?.message || String(error);
   const status = error?.status;
+  // Check response body for error objects (LinkedIn REST API error structures)
+  const bodyError = error?.response?.body?.error || error?.data?.error || error?.errors?.[0];
 
   if (
     status === 401 ||
@@ -54,7 +61,8 @@ export function classifyError(error: any): Error {
     message.includes("invalid_grant") ||
     message.includes("OAuth token refresh failed") ||
     message.includes("expired") ||
-    message.includes("InvalidAccessToken")
+    message.includes("InvalidAccessToken") ||
+    bodyError?.status === 401
   ) {
     return new LinkedInAdsAuthError(
       `LinkedIn Ads auth failed: ${message}. Token may be expired. Re-authenticate and update Keychain.`,
