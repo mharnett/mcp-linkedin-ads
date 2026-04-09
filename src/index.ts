@@ -526,23 +526,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
-  } catch (error: any) {
-    const classified = classifyError(error);
+  } catch (rawError: any) {
+    const classified = classifyError(rawError);
     const isAuth = classified instanceof LinkedInAdsAuthError;
+    // Size-limit error responses through safeResponse to prevent oversized payloads
+    const safeErrorResponse = safeResponse({
+      error: true,
+      error_type: classified.name,
+      message: classified.message,
+      server: __cliPkg.name,
+      action_required: isAuth
+        ? "Re-authenticate LinkedIn Ads and update Keychain: security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w <new_token>"
+        : undefined,
+      details: rawError.stack,
+    }, "error");
     return {
       isError: true,
       content: [{
         type: "text",
-        text: JSON.stringify({
-          error: true,
-          error_type: classified.name,
-          message: classified.message,
-          server: __cliPkg.name,
-          action_required: isAuth
-            ? "Re-authenticate LinkedIn Ads and update Keychain: security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w <new_token>"
-            : undefined,
-          details: error.stack,
-        }, null, 2),
+        text: JSON.stringify(safeErrorResponse, null, 2),
       }],
     };
   }
