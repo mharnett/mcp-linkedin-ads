@@ -8,7 +8,7 @@
 Production-grade MCP server for LinkedIn Campaign Manager API. Enables Claude to manage LinkedIn ad accounts, campaigns, ad sets, and creatives with full read/write support.
 
 **Features:**
-- 7 production-tested tools
+- **7 tools** -- production-tested
 - Multi-account management (multiple LinkedIn ad accounts)
 - Campaign and campaign group listing
 - Account and campaign performance analytics
@@ -81,6 +81,8 @@ Add to `~/.claude.json`:
   }
 }
 ```
+
+**Claude Desktop:** Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows).
 
 ### Example API Calls
 ```typescript
