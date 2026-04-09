@@ -169,10 +169,9 @@ class LinkedInAdsManager {
     if (data.refresh_token && data.refresh_token !== this.refreshToken) {
       this.refreshToken = data.refresh_token;
       try {
-        execSync(
-          `security delete-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN 2>/dev/null; ` +
-          `security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w "${data.refresh_token}"`,
-        );
+        const { execFileSync } = await import("child_process");
+        try { execFileSync("security", ["delete-generic-password", "-a", "linkedin-ads-mcp", "-s", "LINKEDIN_ADS_REFRESH_TOKEN"], { stdio: "ignore" }); } catch { /* may not exist yet */ }
+        execFileSync("security", ["add-generic-password", "-a", "linkedin-ads-mcp", "-s", "LINKEDIN_ADS_REFRESH_TOKEN", "-w", data.refresh_token]);
         logger.info("Rotated refresh token persisted to Keychain");
       } catch (err) {
         logger.warn({ err }, "Failed to persist rotated refresh token to Keychain");
