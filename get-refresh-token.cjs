@@ -98,8 +98,8 @@ const server = https.createServer({ cert, key }, async (req, res) => {
       // Auto-store access token in Keychain
       if (process.platform === "darwin") {
         try {
-          try { execFileSync("security", ["delete-generic-password", "-s", "linkedin-access-token"], { stdio: "ignore" }); } catch { /* may not exist */ }
-          execFileSync("security", ["add-generic-password", "-s", "linkedin-access-token", "-w", data.access_token]);
+          try { execFileSync("security", ["delete-generic-password", "-a", "linkedin-ads-mcp", "-s", "linkedin-access-token"], { stdio: "ignore" }); } catch { /* may not exist */ }
+          execFileSync("security", ["add-generic-password", "-a", "linkedin-ads-mcp", "-s", "linkedin-access-token", "-w", data.access_token]);
           console.log("Access token stored in Keychain (service: linkedin-access-token)");
         } catch (err) {
           console.error("Failed to store access token in Keychain:", err.message);

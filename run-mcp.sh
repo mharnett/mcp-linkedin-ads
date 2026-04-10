@@ -2,7 +2,7 @@
 # Wrapper to launch LinkedIn Ads MCP with tokens from Keychain
 export LINKEDIN_ADS_CLIENT_ID=$(security find-generic-password -s linkedin-client-id -w 2>/dev/null)
 export LINKEDIN_ADS_CLIENT_SECRET=$(security find-generic-password -s linkedin-client-secret -w 2>/dev/null)
-export LINKEDIN_ADS_ACCESS_TOKEN=$(security find-generic-password -s linkedin-access-token -w 2>/dev/null)
+export LINKEDIN_ADS_ACCESS_TOKEN=$(security find-generic-password -a linkedin-ads-mcp -s linkedin-access-token -w 2>/dev/null)
 export LINKEDIN_ADS_REFRESH_TOKEN=$(security find-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w 2>/dev/null)
 
 # Fail fast if critical credentials are missing
