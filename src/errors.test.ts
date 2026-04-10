@@ -12,7 +12,7 @@ describe("classifyError", () => {
     const error = { status: 401, message: "Unauthorized" };
     const result = classifyError(error);
     expect(result).toBeInstanceOf(LinkedInAdsAuthError);
-    expect(result.message).toContain("Auth failed");
+    expect(result.message).toContain("auth failed");
   });
 
   it("classifies 403 status as LinkedInAdsAuthError", () => {

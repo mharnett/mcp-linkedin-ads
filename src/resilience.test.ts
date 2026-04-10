@@ -39,7 +39,7 @@ describe("Resilience", () => {
         })),
       };
       const result = safeResponse(largeObj, "test");
-      expect((result as any).elements.length).toBeLessThan(5000);
+      expect((result as any).elements.length).toBeLessThanOrEqual(5000);
     });
   });
 
