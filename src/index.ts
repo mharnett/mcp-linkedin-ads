@@ -19,6 +19,7 @@ import {
 import { tools } from "./tools.js";
 import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
+import { checkForUpdate } from "./updateNotifier.js";
 import v8 from "v8";
 
 // CLI package info
@@ -104,7 +105,11 @@ interface Config {
 function loadConfig(): Config {
   const configPath = join(dirname(new URL(import.meta.url).pathname), "..", "config.json");
   if (!existsSync(configPath)) {
-    throw new Error(`Config file not found at ${configPath}. Create config.json from config.example.json with your client entries.`);
+    throw new Error(
+      `Config file not found at ${configPath}. Create config.json from config.example.json with your client entries, ` +
+        `or set env vars LINKEDIN_ACCESS_TOKEN, LINKEDIN_ADS_REFRESH_TOKEN, linkedin-client-id, and linkedin-client-secret. ` +
+        `Run 'node get-refresh-token.cjs' to obtain a refresh token.`,
+    );
   }
   return JSON.parse(readFileSync(configPath, "utf-8"));
 }
