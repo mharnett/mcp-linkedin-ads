@@ -17,6 +17,7 @@ import {
   validateCredentials,
 } from "./errors.js";
 import { tools } from "./tools.js";
+import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
 import v8 from "v8";
 
@@ -103,7 +104,11 @@ interface Config {
 function loadConfig(): Config {
   const configPath = join(dirname(new URL(import.meta.url).pathname), "..", "config.json");
   if (!existsSync(configPath)) {
-    throw new Error(`Config file not found at ${configPath}. Create config.json from config.example.json with your client entries.`);
+    throw new Error(
+      `Config file not found at ${configPath}. Create config.json from config.example.json with your client entries, ` +
+        `or set env vars LINKEDIN_ACCESS_TOKEN, LINKEDIN_ADS_REFRESH_TOKEN, linkedin-client-id, and linkedin-client-secret. ` +
+        `Run 'node get-refresh-token.cjs' to obtain a refresh token.`,
+    );
   }
   return JSON.parse(readFileSync(configPath, "utf-8"));
 }
@@ -410,7 +415,7 @@ const server = new Server(
 
 // Handle list tools
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return { tools };
+  return { tools: filterTools(tools) };
 });
 
 // Handle tool calls
@@ -418,6 +423,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   try {
+    assertWriteAllowed(name);
     const resolveAccountId = (accountId?: string): string => {
       if (accountId) return accountId;
       const clients = Object.values(config.clients);
@@ -555,6 +561,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  const writeMode = isWriteEnabled()
+    ? "WRITES ENABLED (LINKEDIN_ADS_MCP_WRITE=true)"
+    : "read-only (set LINKEDIN_ADS_MCP_WRITE=true to enable mutating tools)";
+  console.error(`[startup] write mode: ${writeMode}`);
   logger.info("MCP LinkedIn Ads server running");
 }
 
