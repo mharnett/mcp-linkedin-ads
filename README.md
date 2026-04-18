@@ -64,6 +64,26 @@ npm install mcp-linkedin-ads
    export LINKEDIN_ADS_ACCESS_TOKEN="your_access_token"
    ```
 
+### Environment variables
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `LINKEDIN_ADS_CLIENT_ID` | yes | -- | OAuth client ID |
+| `LINKEDIN_ADS_CLIENT_SECRET` | yes | -- | OAuth client secret |
+| `LINKEDIN_ADS_ACCESS_TOKEN` | yes | -- | OAuth access token |
+| `LINKEDIN_ADS_REFRESH_TOKEN` | optional | -- | OAuth refresh token (rotated automatically when set) |
+| `LINKEDIN_ADS_MCP_WRITE` | optional | `false` | Set to `true` to expose mutating tools. Read-only by default. |
+
+### Read-only by default
+
+The LinkedIn Ads MCP currently ships with read-only tools only. The write-mode
+gate is already in place so that any future create/update/pause/enable/remove
+tool is hidden from `ListTools` and refused at call time unless
+`LINKEDIN_ADS_MCP_WRITE=true` is set in the MCP server environment. This
+mirrors the Google Ads MCP gate and matches the pattern being rolled out to
+Bing / Reddit / Meta. Motivation: prevent a casual LLM request from mutating
+production ad accounts without the operator explicitly opting in.
+
 ## Usage
 
 ### Start the server
