@@ -19,7 +19,6 @@ import {
 import { tools } from "./tools.js";
 import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
-import { checkForUpdate } from "./updateNotifier.js";
 import v8 from "v8";
 
 // CLI package info
