@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.1] - 2026-04-18
+
+### Added
+- **Startup npm outdated check.** At server boot, fires a fire-and-forget
+  HTTP request to `registry.npmjs.org/mcp-linkedin-ads/latest` (2s timeout)
+  and logs a stderr notice when a newer version is available. stdout stays
+  reserved for MCP JSON-RPC. Silent on network error, timeout, or when
+  installed version matches registry. Opt out with
+  `MCP_DISABLE_UPDATE_CHECK=1`. Tests cover up-to-date, outdated, offline,
+  dev-build, and both opt-out modes.
+
 ## [1.1.0] - 2026-04-18
 
 ### Security
