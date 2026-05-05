@@ -58,7 +58,7 @@ export const tools: Tool[] = [
   },
   {
     name: "linkedin_ads_campaign_performance",
-    description: "Get campaign-level performance metrics (impressions, clicks, spend, conversions, leads, engagement, video views) for a date range. This is the main reporting tool for weekly slides.",
+    description: "Get campaign-level performance metrics (impressions, clicks, spend, conversions, leads, engagement, video views, reach, frequency) for a date range. Reach = approximateMemberReach (unique members exposed); frequency = impressions / reach (computed server-side). This is the main reporting tool for weekly slides.",
     inputSchema: {
       additionalProperties: false,
       type: "object",
@@ -73,7 +73,7 @@ export const tools: Tool[] = [
   },
   {
     name: "linkedin_ads_account_performance",
-    description: "Get account-level aggregate performance metrics for a date range. Good for high-level summaries.",
+    description: "Get account-level aggregate performance metrics for a date range. Good for high-level summaries. Note: reach (approximateMemberReach) and the derived frequency field are not populated at pivot=ACCOUNT; query at CAMPAIGN/CAMPAIGN_GROUP via linkedin_ads_campaign_performance or linkedin_ads_analytics if you need reach.",
     inputSchema: {
       additionalProperties: false,
       type: "object",
@@ -104,7 +104,7 @@ export const tools: Tool[] = [
         fields: {
           type: "array",
           items: { type: "string" },
-          description: "Metrics to return. Default: impressions, clicks, costInLocalCurrency, landingPageClicks, oneClickLeads, externalWebsiteConversions, totalEngagements, videoViews, dateRange, pivotValues",
+          description: "Metrics to return. Default: impressions, clicks, costInLocalCurrency, landingPageClicks, oneClickLeads, oneClickLeadFormOpens, externalWebsiteConversions, externalWebsitePostClickConversions, totalEngagements, videoViews, videoCompletions, approximateMemberReach, dateRange, pivotValues. The server adds a derived `frequency` field (impressions / approximateMemberReach) when both are non-zero. Reach is only populated at pivots CAMPAIGN, CREATIVE, and CAMPAIGN_GROUP — it returns 0 at pivot=ACCOUNT.",
         },
         campaign_ids: { type: "array", items: { type: "string" }, description: "Filter by numeric string campaign IDs" },
         campaign_group_ids: { type: "array", items: { type: "string" }, description: "Filter by campaign group IDs" },

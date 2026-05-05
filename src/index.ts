@@ -122,6 +122,23 @@ function getClientFromWorkingDir(config: Config, cwd: string): ClientConfig | nu
   return null;
 }
 
+// Add derived `frequency` (impressions / approximateMemberReach) to each
+// analytics element when both fields are present. approximateMemberReach is
+// only populated by the LinkedIn API at certain pivots (CAMPAIGN, CREATIVE,
+// CAMPAIGN_GROUP); at pivot=ACCOUNT it returns 0, in which case frequency is
+// omitted rather than reported as Infinity.
+function enrichAnalyticsResponse(raw: any): any {
+  if (!raw || !Array.isArray(raw.elements)) return raw;
+  for (const el of raw.elements) {
+    const reach = Number(el?.approximateMemberReach ?? 0);
+    const impr = Number(el?.impressions ?? 0);
+    if (reach > 0 && impr > 0) {
+      el.frequency = +(impr / reach).toFixed(4);
+    }
+  }
+  return raw;
+}
+
 // ============================================
 // LINKEDIN MARKETING API CLIENT
 // ============================================
@@ -333,6 +350,7 @@ class LinkedInAdsManager {
       "oneClickLeads", "oneClickLeadFormOpens",
       "externalWebsiteConversions", "externalWebsitePostClickConversions",
       "totalEngagements", "videoViews", "videoCompletions",
+      "approximateMemberReach",
       "dateRange", "pivotValues",
     ];
 
@@ -358,7 +376,8 @@ class LinkedInAdsManager {
       url += `&campaignGroups=List(${urns})`;
     }
 
-    return await this.apiGetRaw(url);
+    const raw = await this.apiGetRaw(url);
+    return enrichAnalyticsResponse(raw);
   }
 
   async getCampaignPerformance(accountId: string, options: {
