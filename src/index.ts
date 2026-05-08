@@ -314,7 +314,7 @@ class LinkedInAdsManager {
     const statusList = `List(${statuses.join(",")})`;
     let searchParams = `(status:(values:${statusList}))`;
 
-    let url = `${this.config.api.base_url}/adAccounts/${accountId}/adCampaigns?q=search&search=${encodeURIComponent(searchParams)}&count=100`;
+    let url = `${this.config.api.base_url}/adAccounts/${accountId}/adCampaigns?q=search&search=${searchParams}&count=100`;
 
     if (options?.campaignGroupId) {
       url += `&search.campaignGroup.values=List(urn%3Ali%3AsponsoredCampaignGroup%3A${options.campaignGroupId})`;
