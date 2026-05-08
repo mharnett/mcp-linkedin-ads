@@ -4,10 +4,14 @@
  *
  * Prerequisites:
  *   1. Create an app at https://www.linkedin.com/developers/apps
- *      - Products: Add "Marketing Developer Platform" (needs approval)
- *      - OAuth 2.0 scopes: r_ads, r_ads_reporting
+ *      - Products: Add "Advertising API" (Development Tier is sufficient)
+ *      - OAuth 2.0 scopes used: read from config.json oauth.scope at runtime
+ *        (current: r_ads, rw_ads, r_ads_reporting, w_member_social,
+ *         r_organization_social, w_organization_social)
  *      - Redirect URL: https://localhost:8080/callback
  *   2. Set env vars: LINKEDIN_ADS_CLIENT_ID, LINKEDIN_ADS_CLIENT_SECRET
+ *      (the Keychain wrapper run-mcp.sh already exports these from
+ *       linkedin-client-id and linkedin-client-secret entries)
  *   3. Run: node get-refresh-token.cjs
  *   4. Sign in via browser (log in as mark@drakmarketing.com)
  *   5. Store tokens in Keychain:
@@ -24,7 +28,14 @@ const CLIENT_ID = process.env.LINKEDIN_ADS_CLIENT_ID;
 const CLIENT_SECRET = process.env.LINKEDIN_ADS_CLIENT_SECRET;
 const PORT = 8080;
 const REDIRECT_URI = `https://localhost:${PORT}/callback`;
-const SCOPE = "r_ads r_ads_reporting";
+// Read scopes from config.json so this script stays in lockstep with what the
+// MCP advertises at runtime. Scopes are comma-separated in config; LinkedIn's
+// auth endpoint wants a space-separated list.
+const { readFileSync: _readFileSync } = require("fs");
+const { join: _join } = require("path");
+const _cfg = JSON.parse(_readFileSync(_join(__dirname, "config.json"), "utf8"));
+const SCOPE = ((_cfg.oauth && _cfg.oauth.scope) || "r_ads,r_ads_reporting")
+  .split(",").map(s => s.trim()).filter(Boolean).join(" ");
 const AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
 const TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken";
 
