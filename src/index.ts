@@ -354,10 +354,15 @@ class LinkedInAdsManager {
       "dateRange", "pivotValues",
     ];
 
+    // LinkedIn Restli quirk (verified against /rest/adAnalytics with
+    // LinkedIn-Version 202602): dateRange value must use literal
+    // parens/colons/commas — percent-encoding them returns 400 PARAM_INVALID.
+    // The URN inside accounts=List(...) MUST be percent-encoded, but the
+    // List() wrapper itself stays literal. fields uses literal commas.
     const accountUrn = encodeURIComponent(`urn:li:sponsoredAccount:${options.accountId}`);
     let url = `${this.config.api.base_url}/adAnalytics?q=analytics` +
       `&pivot=${options.pivot}` +
-      `&dateRange=${encodeURIComponent(dateRange)}` +
+      `&dateRange=${dateRange}` +
       `&timeGranularity=${granularity}` +
       `&accounts=List(${accountUrn})` +
       `&fields=${fields.join(",")}`;
