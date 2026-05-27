@@ -8,7 +8,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { readFileSync, existsSync } from "fs";
 import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { execSync } from "child_process";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import {
   LinkedInAdsAuthError,
   LinkedInAdsRateLimitError,
@@ -22,12 +25,11 @@ import { withResilience, safeResponse, logger } from "./resilience.js";
 import v8 from "v8";
 
 // CLI package info
-const __cliPkg = JSON.parse(readFileSync(join(dirname(new URL(import.meta.url).pathname), "..", "package.json"), "utf-8"));
+const __cliPkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"));
 
 // Log build fingerprint at startup
 try {
-  const __buildInfoDir = dirname(new URL(import.meta.url).pathname);
-  const buildInfo = JSON.parse(readFileSync(join(__buildInfoDir, "build-info.json"), "utf-8"));
+  const buildInfo = JSON.parse(readFileSync(join(__dirname, "build-info.json"), "utf-8"));
   console.error(`[build] SHA: ${buildInfo.sha} (${buildInfo.builtAt})`);
 } catch {
   console.error(`[build] ${__cliPkg.name}@${__cliPkg.version} (dev mode)`);
@@ -102,7 +104,7 @@ interface Config {
 }
 
 function loadConfig(): Config {
-  const configPath = join(dirname(new URL(import.meta.url).pathname), "..", "config.json");
+  const configPath = join(__dirname, "..", "config.json");
   if (!existsSync(configPath)) {
     throw new Error(
       `Config file not found at ${configPath}. Create config.json from config.example.json with your client entries, ` +
