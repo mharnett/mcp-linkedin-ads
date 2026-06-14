@@ -1,4 +1,5 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { createWriteGate } from "mcp-write-gate";
 
 /**
  * Tools that mutate LinkedIn Ads state. These are hidden from the tool list
@@ -11,23 +12,26 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
  * only. The gate still ships so that any future write tool is gated by
  * default, matching the Google Ads / Bing / Reddit / Meta pattern.
  */
-export const WRITE_TOOLS: ReadonlySet<string> = new Set([]);
+const WRITE_TOOLS: ReadonlySet<string> = new Set([]);
+
+const gate = createWriteGate({
+  writeTools: WRITE_TOOLS,
+  envPrefix: "LINKEDIN_ADS",
+});
 
 export function isWriteTool(name: string): boolean {
-  return WRITE_TOOLS.has(name);
+  return gate.isWriteTool(name);
 }
 
 export function isWriteEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  const v = (env.LINKEDIN_ADS_MCP_WRITE || "").trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
+  return gate.isWriteEnabled(env);
 }
 
 export function filterTools(
   allTools: readonly Tool[],
   env: NodeJS.ProcessEnv = process.env,
 ): Tool[] {
-  if (isWriteEnabled(env)) return [...allTools];
-  return allTools.filter((t) => !WRITE_TOOLS.has(t.name));
+  return gate.filterTools(allTools, env);
 }
 
 export const WRITE_DISABLED_MESSAGE =
@@ -41,9 +45,11 @@ export function assertWriteAllowed(
   toolName: string,
   env: NodeJS.ProcessEnv = process.env,
 ): void {
-  if (!isWriteTool(toolName)) return;
-  if (isWriteEnabled(env)) return;
-  throw new Error(
-    `Tool "${toolName}" is a write operation. ${WRITE_DISABLED_MESSAGE}`,
-  );
+  try {
+    gate.assertWriteAllowed(toolName, env);
+  } catch (e) {
+    throw new Error(
+      `Tool "${toolName}" is a write operation. ${WRITE_DISABLED_MESSAGE}`,
+    );
+  }
 }
