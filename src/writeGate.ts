@@ -12,7 +12,7 @@ import { createWriteGate } from "mcp-write-gate";
  * only. The gate still ships so that any future write tool is gated by
  * default, matching the Google Ads / Bing / Reddit / Meta pattern.
  */
-const WRITE_TOOLS: ReadonlySet<string> = new Set([]);
+export const WRITE_TOOLS: ReadonlySet<string> = new Set([]);
 
 const gate = createWriteGate({
   writeTools: WRITE_TOOLS,
