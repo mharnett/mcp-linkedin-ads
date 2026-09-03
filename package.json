@@ -27,7 +27,7 @@
     "dev": "tsx src/index.ts",
     "test": "vitest run && npm run test:shell",
     "smoke": "scripts/healthcheck.sh",
-    "test:shell": "bash tests/run-mcp-credentials.test.sh"
+    "test:shell": "bash tests/run-mcp-credentials.test.sh && bash tests/run-mcp-keychain.test.sh"
   },
   "keywords": [
     "mcp",
