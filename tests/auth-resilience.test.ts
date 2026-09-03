@@ -64,7 +64,9 @@ describe("run-mcp.sh wrapper", () => {
     );
 
     expect(script).toContain("LINKEDIN_ADS_REFRESH_TOKEN");
-    expect(script).toContain("security find-generic-password");
+    // Migrated to the shared drak_ops keychain_get.sh helper (mharnett/drak-ops#19,
+    // see mcp-linkedin-ads#8) -- was "security find-generic-password" before that.
+    expect(script).toContain("keychain_get");
     expect(script).toContain("linkedin-ads-mcp");
   });
 

@@ -10,12 +10,19 @@
 # only has the legacy entry still gets a real access token instead of silently
 # degrading to refresh-token-only.
 #
-# Runs hermetically: `security` and `node` are stubbed on PATH, so no Keychain
-# access and no server launch.
+# Runs hermetically: `security`, `node`, and `python3` are stubbed on PATH,
+# so no Keychain access, no server launch, and no dependency on a real
+# drak_ops install (run-mcp.sh now sources the shared drak_ops
+# keychain_get.sh helper -- see mcp-linkedin-ads#8 -- resolved via a
+# `python3 -c '...keychain_shell_helper_path...'` one-liner that CI runners
+# without a real drak_ops install can't satisfy; the `python3` stub below
+# resolves it to tests/fixtures/keychain_get.sh instead).
 
 set -uo pipefail
 
-SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/run-mcp.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT="$ROOT/run-mcp.sh"
+FIXTURE_HELPER="$ROOT/tests/fixtures/keychain_get.sh"
 PASS=0
 FAIL=0
 
@@ -56,7 +63,12 @@ echo "REFRESH=${LINKEDIN_ADS_REFRESH_TOKEN:-}"
 exit 0
 STUB
 
-  chmod +x "$dir/security" "$dir/node"
+  cat >"$dir/python3" <<STUB
+#!/bin/bash
+echo "$FIXTURE_HELPER"
+STUB
+
+  chmod +x "$dir/security" "$dir/node" "$dir/python3"
   echo "$dir"
 }
 

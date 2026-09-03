@@ -13,18 +13,27 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT="$ROOT/run-mcp.sh"
+FIXTURE_HELPER="$ROOT/tests/fixtures/keychain_get.sh"
 PASS=0
 FAIL=0
 
 # Every tracked .sh file allowed to still contain the raw literal, and why.
 # An allowance WITH a reason, not a blanket skip -- so the set can only shrink.
 # (macOS ships bash 3.2, no associative arrays -- plain list + grep instead.)
-ALLOWED_LITERAL_FILES="tests/run-mcp-credentials.test.sh"
-# Reason: stubs a fake `security` on PATH to test run-mcp.sh's own
-# canonical/legacy access-token fallback logic -- not a real Keychain lookup.
-# The literal only appears inside a comment documenting the stub's
-# arg-parsing. Left unmigrated per this migration's own instructions: a
-# mock/fixture exercising the inline pattern, not a real lookup.
+ALLOWED_LITERAL_FILES="tests/run-mcp-credentials.test.sh tests/run-mcp-keychain.test.sh tests/fixtures/keychain_get.sh"
+# Reasons:
+#   tests/run-mcp-credentials.test.sh -- stubs a fake `security` on PATH to
+#     test run-mcp.sh's own canonical/legacy access-token fallback logic --
+#     not a real Keychain lookup. The literal only appears inside a comment
+#     documenting the stub's arg-parsing. Left unmigrated per this
+#     migration's own instructions: a mock/fixture exercising the inline
+#     pattern, not a real lookup.
+#   tests/run-mcp-keychain.test.sh -- this file: the fake `security` stub
+#     and this comment necessarily mention the literal to describe/detect it.
+#   tests/fixtures/keychain_get.sh -- a hermetic double of the real shared
+#     helper, which itself contains the literal as its own implementation
+#     (exactly like the real drak_ops/keychain_get.sh does) -- this is the
+#     one place the string is SUPPOSED to live, not an inline caller.
 
 is_allowed() {
   local rel="$1" f
@@ -67,7 +76,17 @@ echo "REFRESH=${LINKEDIN_ADS_REFRESH_TOKEN:-}"
 exit 0
 STUB
 
-  chmod +x "$dir/security" "$dir/node"
+  # Fake `python3`: run-mcp.sh's only use of it is
+  # `python3 -c 'from drak_ops.keychain import keychain_shell_helper_path ...'`
+  # to resolve HELPER. Rather than requiring a real drak_ops install (not
+  # available on these CI runners), print the path to the checked-in test
+  # fixture that doubles it.
+  cat >"$dir/python3" <<STUB
+#!/bin/bash
+echo "$FIXTURE_HELPER"
+STUB
+
+  chmod +x "$dir/security" "$dir/node" "$dir/python3"
   echo "$dir"
 }
 
