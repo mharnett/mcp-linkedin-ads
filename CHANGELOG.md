@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.1.3...mcp-linkedin-ads-v1.1.4) (2026-10-30)
+
+
+### Bug Fixes
+
+* ship Keychain access-token fallback and run-mcp.sh keychain_get.sh migration ([#12](https://github.com/mharnett/mcp-linkedin-ads/issues/12)) ([bcd55d2](https://github.com/mharnett/mcp-linkedin-ads/commit/bcd55d21266304bf894e1de60075c519b64cd889))
+
 ## [1.1.3](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.1.2...mcp-linkedin-ads-v1.1.3) (2026-07-09)
 
 
