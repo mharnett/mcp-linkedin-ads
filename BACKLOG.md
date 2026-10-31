@@ -5,9 +5,8 @@
 **Status:** Backlogged 2026-05-18.
 
 **Goal:** Wrap LinkedIn campaign creation as MCP tools for private use.
-Source of truth for the API surface is the working Python uploader at
-[forcepoint/linkedIn/linkedin_uploader.py](../../clients/forcepoint/linkedIn/linkedin_uploader.py)
-and [forcepoint/linkedIn/li_api.py](../../clients/forcepoint/linkedIn/li_api.py).
+Source of truth for the API surface is a working private Python uploader
+(`linkedin_uploader.py` / `li_api.py`, kept outside this repo).
 
 **Not for OSS publish.** Public publish would require LinkedIn Marketing
 Developer Program partner approval per consumer — out of scope. This is a
@@ -44,7 +43,7 @@ CSV batch.
 
 ## Targeting-edit write tools (surgical geo / facet removal)
 
-**Status:** Backlogged 2026-06-01. Triggered by a real gap: a Forcepoint
+**Status:** Backlogged 2026-06-01. Triggered by a real gap: a client
 "remove geo account-wide (South Africa, Papua New Guinea, New Zealand)" task
 could be verified read-only via this MCP, but **not executed** — there is no
 tool to edit an existing campaign's targeting, and no read-only path surfaced
@@ -81,7 +80,7 @@ actually enforce before any write tool ships.
 
 ### Immediate follow-up (outside the MCP)
 
-The 4 live Forcepoint campaigns still serving these geos (3× South Africa,
+The 4 live client campaigns still serving these geos (3× South Africa,
 1× New Zealand) need a near-term fix via either a new surgical function in
 `linkedin_uploader.py` (read-modify-write, NOT `update_targeting_on_drafts`)
 or a manual Campaign Manager edit. Tracked separately from this MCP item.

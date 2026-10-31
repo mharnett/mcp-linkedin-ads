@@ -13,7 +13,7 @@
  *      (the Keychain wrapper run-mcp.sh already exports these from
  *       linkedin-client-id and linkedin-client-secret entries)
  *   3. Run: node get-refresh-token.cjs
- *   4. Sign in via browser (log in as mark@drakmarketing.com)
+ *   4. Sign in via browser (log in as the account that owns the app)
  *   5. Store tokens in Keychain:
  *      security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w "<token>" -U
  */
@@ -160,7 +160,7 @@ const server = https.createServer({ cert, key }, async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`HTTPS callback server listening on port ${PORT}`);
-  console.log("Opening browser for LinkedIn sign-in (log in as mark@drakmarketing.com)...");
+  console.log("Opening browser for LinkedIn sign-in (log in as the account that owns the app)...");
   console.log("Auth URL:", authUrl);
   try {
     execSync(`open "${authUrl}"`);

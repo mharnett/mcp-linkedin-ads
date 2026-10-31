@@ -17,7 +17,7 @@ Production-grade MCP server for LinkedIn Campaign Manager API. Enables Claude to
 
 **Stats:**
 - ⭐ Production-proven: active campaigns under management
-- 📊 Multi-client: Flowspace, Forcepoint, Neon One
+- 📊 Multi-client: per-client config, no client data in repo
 - 🔄 CTR accuracy: Uses `landingPageClicks` (not total clicks with engagement)
 - ✅ Full test coverage: 40+ contract tests
 
