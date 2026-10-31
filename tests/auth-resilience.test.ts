@@ -145,7 +145,7 @@ describe("token persistence in MCP server", () => {
 });
 
 describe("OAuth redirect URI consistency", () => {
-  it("get-refresh-token.cjs and forcepoint oauth_flow.py use the same redirect URI", () => {
+  it("get-refresh-token.cjs and the private oauth_flow.py use the same redirect URI", () => {
     const fs = require("fs");
     const path = require("path");
 

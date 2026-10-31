@@ -24,7 +24,7 @@ fi
 
 if [ -z "$LINKEDIN_ADS_ACCESS_TOKEN" ] && [ -z "$LINKEDIN_ADS_REFRESH_TOKEN" ]; then
   echo "[FATAL] Neither ACCESS_TOKEN nor REFRESH_TOKEN found -- at least one is required." >&2
-  echo "  Fix: node get-refresh-token.cjs  (log in as mark@drakmarketing.com)" >&2
+  echo "  Fix: node get-refresh-token.cjs  (log in as the account that owns the app)" >&2
   exit 1
 fi
 
