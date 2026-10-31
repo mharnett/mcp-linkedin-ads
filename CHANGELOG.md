@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.1.4...mcp-linkedin-ads-v1.1.5) (2026-10-31)
+
+
+### Miscellaneous Chores
+
+* release 1.1.5 ([#16](https://github.com/mharnett/mcp-linkedin-ads/issues/16)) ([2b59128](https://github.com/mharnett/mcp-linkedin-ads/commit/2b59128d12c3c9d04a846b5e26e4dbcf1866c50e))
+
 ## [1.1.4](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.1.3...mcp-linkedin-ads-v1.1.4) (2026-10-30)
 
 
