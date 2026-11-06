@@ -22,6 +22,7 @@ import {
 import { tools } from "./tools.js";
 import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
+import { PredictiveAudienceClient } from "./predictiveAudiences.js";
 import v8 from "v8";
 
 // CLI package info
@@ -151,8 +152,14 @@ class LinkedInAdsManager {
   private tokenExpiry: number = 0;
   private refreshToken: string;
 
+  readonly predictive: PredictiveAudienceClient;
+
   constructor(config: Config) {
     this.config = config;
+    this.predictive = new PredictiveAudienceClient({
+      baseUrl: config.api.base_url,
+      getToken: () => this.getAccessToken(),
+    });
 
     // Validate credentials at startup — fail fast
     const creds = validateCredentials();
@@ -553,6 +560,52 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         });
         return {
           content: [{ type: "text", text: JSON.stringify(safeResponse(result, "analytics"), null, 2) }],
+        };
+      }
+
+      case "linkedin_ads_list_predictive_audiences": {
+        const result = await adsManager.predictive.list(args?.account_id as string);
+        return {
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "list_predictive_audiences"), null, 2) }],
+        };
+      }
+
+      case "linkedin_ads_get_predictive_audience": {
+        const result = await adsManager.predictive.get(args?.dmp_segment_id as string);
+        return {
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "get_predictive_audience"), null, 2) }],
+        };
+      }
+
+      case "linkedin_ads_create_predictive_audience": {
+        const result = await adsManager.predictive.create({
+          accountId: args?.account_id as string,
+          confirmAccountId: args?.confirm_account_id as string,
+          name: args?.name as string,
+          locations: args?.locations as string[],
+          seeds: args?.seeds as string[],
+          desiredAudienceCount: args?.desired_audience_count as number,
+          existingDmpSegmentId: args?.existing_dmp_segment_id as string | undefined,
+          dryRun: args?.dry_run as boolean | undefined,
+        });
+        return {
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "create_predictive_audience"), null, 2) }],
+        };
+      }
+
+      case "linkedin_ads_update_predictive_audience": {
+        const result = await adsManager.predictive.update({
+          accountId: args?.account_id as string,
+          confirmAccountId: args?.confirm_account_id as string,
+          dmpSegmentId: args?.dmp_segment_id as string,
+          name: args?.name as string | undefined,
+          locations: args?.locations as string[] | undefined,
+          seeds: args?.seeds as string[] | undefined,
+          desiredAudienceCount: args?.desired_audience_count as number | undefined,
+          dryRun: args?.dry_run as boolean | undefined,
+        });
+        return {
+          content: [{ type: "text", text: JSON.stringify(safeResponse(result, "update_predictive_audience"), null, 2) }],
         };
       }
 
