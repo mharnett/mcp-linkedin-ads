@@ -3,7 +3,7 @@
     "client_id": "YOUR_LINKEDIN_CLIENT_ID",
     "client_secret": "YOUR_LINKEDIN_CLIENT_SECRET",
     "token_url": "https://www.linkedin.com/oauth/v2/accessToken",
-    "scope": "r_ads,rw_ads,w_member_social,r_organization_social,w_organization_social"
+    "scope": "r_ads,rw_ads,r_ads_reporting,rw_dmp_segments,w_member_social,r_organization_social,w_organization_social"
   },
   "api": {
     "base_url": "https://api.linkedin.com/rest",

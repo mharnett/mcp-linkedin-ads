@@ -112,4 +112,66 @@ export const tools: Tool[] = [
       required: ["start_date", "end_date", "pivot"],
     },
   },
+  {
+    name: "linkedin_ads_list_predictive_audiences",
+    description: "List LinkedIn Predictive Audiences (lookalikes) in an ad account: each parent DMP segment with its name, destinations/build status, location filter, seeds and desiredAudienceCount. account_id is required (never taken from the working directory).",
+    inputSchema: {
+      additionalProperties: false,
+      type: "object",
+      properties: {
+        account_id: { type: "string", description: "Ad account id" },
+      },
+      required: ["account_id"],
+    },
+  },
+  {
+    name: "linkedin_ads_get_predictive_audience",
+    description: "Get one LinkedIn Predictive Audience by its parent DMP segment id: name, account, destinations (build status, size), targetingFilter (locations), seeds, desiredAudienceCount and versionTag.",
+    inputSchema: {
+      additionalProperties: false,
+      type: "object",
+      properties: {
+        dmp_segment_id: { type: "string", description: "Parent DMP segment id (the id shown by list_predictive_audiences)" },
+      },
+      required: ["dmp_segment_id"],
+    },
+  },
+  {
+    name: "linkedin_ads_create_predictive_audience",
+    description: "WRITE. Create a LinkedIn Predictive Audience (lookalike): a parent DMP segment plus its audience (locations, seeds, size), then read it back. Requires account_id AND confirm_account_id set to the same id. Use dry_run first to see the payloads. If the audience step fails after the parent was made, retry with existing_dmp_segment_id instead of creating another parent. Segments created after 2026-09-04 cannot be attached to campaigns via API; attach in Campaign Manager.",
+    inputSchema: {
+      additionalProperties: false,
+      type: "object",
+      properties: {
+        account_id: { type: "string", description: "Ad account id to create in" },
+        confirm_account_id: { type: "string", description: "Repeat account_id to confirm the write" },
+        name: { type: "string", description: "Audience name" },
+        locations: { type: "array", items: { type: "string" }, description: "Geo URNs, e.g. urn:li:geo:103644278 (required by LinkedIn)" },
+        seeds: { type: "array", items: { type: "string" }, description: "Seed segment URNs, e.g. urn:li:dmpSegment:123456" },
+        desired_audience_count: { type: "integer", description: "Target audience size (required by LinkedIn)" },
+        existing_dmp_segment_id: { type: "string", description: "Reuse an existing empty parent segment (after a failed create)" },
+        dry_run: { type: "boolean", description: "Return the payloads without writing" },
+      },
+      required: ["account_id", "confirm_account_id", "name", "locations", "seeds", "desired_audience_count"],
+    },
+  },
+  {
+    name: "linkedin_ads_update_predictive_audience",
+    description: "WRITE. Partially update a LinkedIn Predictive Audience in place: name, locations (replaces the full list), seeds (replaces) and/or desired_audience_count, then read it back and report any field that did not stick. Requires account_id AND confirm_account_id set to the same id; refuses a segment owned by another account. dry_run shows the before-state and patches without writing.",
+    inputSchema: {
+      additionalProperties: false,
+      type: "object",
+      properties: {
+        account_id: { type: "string", description: "Ad account id that owns the segment" },
+        confirm_account_id: { type: "string", description: "Repeat account_id to confirm the write" },
+        dmp_segment_id: { type: "string", description: "Parent DMP segment id" },
+        name: { type: "string", description: "New name" },
+        locations: { type: "array", items: { type: "string" }, description: "Full replacement list of geo URNs" },
+        seeds: { type: "array", items: { type: "string" }, description: "Full replacement list of seed segment URNs" },
+        desired_audience_count: { type: "integer", description: "New target audience size" },
+        dry_run: { type: "boolean", description: "Show the patches without writing" },
+      },
+      required: ["account_id", "confirm_account_id", "dmp_segment_id"],
+    },
+  },
 ];

@@ -17,9 +17,20 @@ const READ_TOOLS = [
   "linkedin_ads_campaign_performance",
   "linkedin_ads_account_performance",
   "linkedin_ads_analytics",
+  "linkedin_ads_list_predictive_audiences",
+  "linkedin_ads_get_predictive_audience",
+];
+
+const EXPECTED_WRITE_TOOLS = [
+  "linkedin_ads_create_predictive_audience",
+  "linkedin_ads_update_predictive_audience",
 ];
 
 describe("writeGate", () => {
+  it("WRITE_TOOLS is exactly the predictive-audience create/update pair", () => {
+    expect([...WRITE_TOOLS].sort()).toEqual([...EXPECTED_WRITE_TOOLS].sort());
+  });
+
   describe("tool classification covers every registered tool", () => {
     it("every tool is either in WRITE_TOOLS or in the READ_TOOLS fixture", () => {
       const registered = tools.map((t) => t.name);

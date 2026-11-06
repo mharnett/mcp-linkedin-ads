@@ -8,11 +8,14 @@ import { createWriteGate } from "mcp-write-gate";
  * Adding a new tool? Put it in this set if it creates, modifies, pauses,
  * enables, removes, links, unlinks, or applies anything.
  *
- * This set is currently empty: the LinkedIn Ads MCP exposes read-only tools
- * only. The gate still ships so that any future write tool is gated by
- * default, matching the Google Ads / Bing / Reddit / Meta pattern.
+ * Write tools also require account_id and a matching confirm_account_id at
+ * call time (predictiveAudiences.assertAccountConfirmed); this gate is the
+ * outer switch.
  */
-export const WRITE_TOOLS: ReadonlySet<string> = new Set([]);
+export const WRITE_TOOLS: ReadonlySet<string> = new Set([
+  "linkedin_ads_create_predictive_audience",
+  "linkedin_ads_update_predictive_audience",
+]);
 
 const gate = createWriteGate({
   writeTools: WRITE_TOOLS,

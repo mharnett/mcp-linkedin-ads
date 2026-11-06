@@ -76,13 +76,40 @@ npm install mcp-linkedin-ads
 
 ### Read-only by default
 
-The LinkedIn Ads MCP currently ships with read-only tools only. The write-mode
-gate is already in place so that any future create/update/pause/enable/remove
-tool is hidden from `ListTools` and refused at call time unless
-`LINKEDIN_ADS_MCP_WRITE=true` is set in the MCP server environment. This
-mirrors the Google Ads MCP gate and matches the pattern being rolled out to
-Bing / Reddit / Meta. Motivation: prevent a casual LLM request from mutating
-production ad accounts without the operator explicitly opting in.
+Write tools (currently `linkedin_ads_create_predictive_audience` and
+`linkedin_ads_update_predictive_audience`) are hidden from `ListTools` and
+refused at call time unless `LINKEDIN_ADS_MCP_WRITE=true` is set in the MCP
+server environment. This mirrors the Google Ads MCP gate. Motivation: prevent a
+casual LLM request from mutating production ad accounts without the operator
+explicitly opting in.
+
+Each write also requires `account_id` **and** `confirm_account_id` set to the
+same id. The account is never resolved from the working directory or a default,
+and an update refuses a segment owned by a different account. Every write reads
+the object back and returns any field that did not stick as `mismatches`.
+
+### Predictive audiences (lookalikes)
+
+| Tool | Kind |
+|------|------|
+| `linkedin_ads_list_predictive_audiences` | read — every predictive audience in an account, with locations, seeds, size, build status |
+| `linkedin_ads_get_predictive_audience` | read — one audience by parent DMP segment id |
+| `linkedin_ads_create_predictive_audience` | write — parent DMP segment + audience, then read-back; `dry_run` supported |
+| `linkedin_ads_update_predictive_audience` | write — partial update of name, locations, seeds, desired size; `dry_run` supported |
+
+Requirements and behaviour (verified live 2026-11-05):
+
+- The token needs the `rw_dmp_segments` scope (included in `config.example.json`).
+  LinkedIn grants DMP write access per developer app.
+- These calls use `LinkedIn-Version: 202607` regardless of `api.version`; the
+  audience endpoints 404 at 202604.
+- `desired_audience_count` and at least one `urn:li:geo:` location are required on create.
+- Freshly created audiences 404 their POST/PATCH for a few seconds, and reads lag
+  writes; the tools retry 404s and re-read before reporting a mismatch.
+- If create fails after the parent segment exists, the error names it; retry
+  with `existing_dmp_segment_id` instead of creating a second parent.
+- Segments created after early September 2026 cannot be attached to campaigns
+  through the API in our testing; attach them in Campaign Manager.
 
 ## Usage
 
