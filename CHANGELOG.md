@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.1.5...mcp-linkedin-ads-v1.2.0) (2026-11-12)
+
+
+### Features
+
+* predictive audience (lookalike) list/get/create/update tools ([#18](https://github.com/mharnett/mcp-linkedin-ads/issues/18)) ([03f0955](https://github.com/mharnett/mcp-linkedin-ads/commit/03f095593cebe145dabb3e58a2092ea53e76b8f4))
+
 ## [1.1.5](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.1.4...mcp-linkedin-ads-v1.1.5) (2026-10-31)
 
 
