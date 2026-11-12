@@ -2,7 +2,7 @@
   "name": "mcp-linkedin-ads",
   "mcpName": "io.github.mharnett/linkedin-ads",
   "version": "1.1.5",
-  "description": "MCP server for LinkedIn Campaign Manager API with full campaign, ad group, creative, and targeting support. Production-proven with 65+ campaigns under active management.",
+  "description": "MCP server for LinkedIn Campaign Manager API for campaign reporting, pivot analytics, and predictive (lookalike) audiences. Production-proven with 65+ campaigns under active management.",
   "main": "dist/index.js",
   "bin": {
     "mcp-linkedin-ads": "dist/index.js"

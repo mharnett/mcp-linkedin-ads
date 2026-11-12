@@ -5,10 +5,10 @@
 [![GitHub stars](https://img.shields.io/github/stars/mharnett/mcp-linkedin-ads)](https://github.com/mharnett/mcp-linkedin-ads)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Production-grade MCP server for LinkedIn Campaign Manager API. Enables Claude to manage LinkedIn ad accounts, campaigns, ad sets, and creatives with full read/write support.
+Production-grade MCP server for LinkedIn Campaign Manager API. Enables Claude to report on LinkedIn ad accounts, campaign groups and campaigns, and to manage predictive (lookalike) audiences. Reporting is read-only; the two audience write tools are off unless enabled.
 
 **Features:**
-- **7 tools** -- production-tested
+- **11 tools** (9 read, 2 write) -- production-tested
 - Multi-account management (multiple LinkedIn ad accounts)
 - Campaign and campaign group listing
 - Account and campaign performance analytics
@@ -113,19 +113,19 @@ Requirements and behaviour (verified live 2026-11-05):
 
 ## Usage
 
-### Start the server
-```bash
-npm start
-```
-
 ### Use with Claude Code
-Add to `~/.claude.json`:
+The server runs locally over stdio; your MCP client starts it. Add to `~/.claude.json` (or a project `.mcp.json`):
 ```json
 {
   "mcpServers": {
     "linkedin-ads": {
-      "type": "http",
-      "url": "http://localhost:3001"
+      "command": "npx",
+      "args": ["-y", "mcp-linkedin-ads"],
+      "env": {
+        "LINKEDIN_ADS_CLIENT_ID": "your_client_id",
+        "LINKEDIN_ADS_CLIENT_SECRET": "your_client_secret",
+        "LINKEDIN_ADS_ACCESS_TOKEN": "your_access_token"
+      }
     }
   }
 }
@@ -258,6 +258,6 @@ Contributions welcome! Please:
 
 Built with production workloads in mind: resilient API calls (circuit breakers, retry with backoff, response truncation), accurate CTR calculation (landing page clicks, not total clicks), and multi-account support.
 
-**Also by Mark:** [mcp-bing-ads](https://github.com/mharnett/mcp-bing-ads) -- Bing/Microsoft Ads MCP server with 10 tools.
+**Also by Mark:** [mcp-bing-ads](https://github.com/mharnett/mcp-bing-ads) -- Bing/Microsoft Ads MCP server with 13 tools.
 
 **Last Updated:** 2026-03-13
