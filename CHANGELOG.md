@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.2.0...mcp-linkedin-ads-v1.2.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* default LinkedIn-Version 202607 with one source of truth ([#24](https://github.com/mharnett/mcp-linkedin-ads/issues/24)) ([aade286](https://github.com/mharnett/mcp-linkedin-ads/commit/aade286b172e9e6d4165e45d60071410343b1120))
+* start from env vars alone when config.json is absent ([#22](https://github.com/mharnett/mcp-linkedin-ads/issues/22)) ([96ead87](https://github.com/mharnett/mcp-linkedin-ads/commit/96ead873317e47535dfe777ffd239d34e8e8bc8d))
+* start from env vars alone when config.json is absent (npx path) ([96ead87](https://github.com/mharnett/mcp-linkedin-ads/commit/96ead873317e47535dfe777ffd239d34e8e8bc8d))
+
 ## [1.2.0](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.1.5...mcp-linkedin-ads-v1.2.0) (2026-11-12)
 
 
