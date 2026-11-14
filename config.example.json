@@ -7,7 +7,7 @@
   },
   "api": {
     "base_url": "https://api.linkedin.com/rest",
-    "version": "202504"
+    "version": "202607"
   },
   "clients": {
     "default": {

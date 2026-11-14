@@ -15,7 +15,9 @@
  * retried parent POST would create a second segment.
  */
 
-export const PA_VERSION = "202607";
+import { DEFAULT_API_VERSION } from "./config.js";
+
+export const PA_VERSION = DEFAULT_API_VERSION;
 export const LOCATIONS_FACET = "urn:li:adTargetingFacet:locations";
 export const PA_SOURCE_PLATFORM = "LINKEDIN_BUSINESS_OBJECTIVE_BASED_AUDIENCES";
 

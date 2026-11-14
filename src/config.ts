@@ -12,6 +12,14 @@ export interface Config {
   clients: Record<string, ClientConfig>;
 }
 
+/**
+ * The one LinkedIn-Version the server sends, unless a config.json overrides it.
+ * Predictive audiences need 202607 or later (the child path 404s at 202604), so
+ * everything shares this. config.example.json must match; tests/api-version.test.ts
+ * fails if it drifts. LinkedIn sunsets each version about a year after release.
+ */
+export const DEFAULT_API_VERSION = "202607";
+
 const clean = (v: string | undefined): string => (v || "").trim().replace(/^["']|["']$/g, "");
 
 /**
@@ -64,7 +72,7 @@ export function buildConfig(opts: {
       token_url: defaults.oauth.token_url,
       scope: defaults.oauth.scope,
     },
-    api: { base_url: defaults.api.base_url, version: defaults.api.version },
+    api: { base_url: defaults.api.base_url, version: DEFAULT_API_VERSION },
     clients: accountId ? { default: { account_id: accountId, name: "Default account", folder: "" } } : {},
   };
 }
