@@ -19,6 +19,7 @@ import {
   classifyError,
   validateCredentials,
 } from "./errors.js";
+import { buildConfig, type Config, type ClientConfig } from "./config.js";
 import { tools } from "./tools.js";
 import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
@@ -80,40 +81,12 @@ const envTrimmed = (key: string): string => (process.env[key] || "").trim().repl
 // CONFIGURATION
 // ============================================
 
-interface ClientConfig {
-  account_id: string;
-  name: string;
-  folder: string;
-}
-
-interface OAuthConfig {
-  client_id: string;
-  client_secret: string;
-  token_url: string;
-  scope: string;
-}
-
-interface ApiConfig {
-  base_url: string;
-  version: string;
-}
-
-interface Config {
-  oauth: OAuthConfig;
-  api: ApiConfig;
-  clients: Record<string, ClientConfig>;
-}
-
 function loadConfig(): Config {
-  const configPath = join(__dirname, "..", "config.json");
-  if (!existsSync(configPath)) {
-    throw new Error(
-      `Config file not found at ${configPath}. Create config.json from config.example.json with your client entries, ` +
-        `or set env vars LINKEDIN_ACCESS_TOKEN, LINKEDIN_ADS_REFRESH_TOKEN, linkedin-client-id, and linkedin-client-secret. ` +
-        `Run 'node get-refresh-token.cjs' to obtain a refresh token.`,
-    );
-  }
-  return JSON.parse(readFileSync(configPath, "utf-8"));
+  return buildConfig({
+    configPath: join(__dirname, "..", "config.json"),
+    examplePath: join(__dirname, "..", "config.example.json"),
+    env: process.env,
+  });
 }
 
 function getClientFromWorkingDir(config: Config, cwd: string): ClientConfig | null {
