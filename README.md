@@ -7,6 +7,53 @@
 
 Production-grade MCP server for LinkedIn Campaign Manager API. Enables Claude to report on LinkedIn ad accounts, campaign groups and campaigns, and to manage predictive (lookalike) audiences. Reporting is read-only; the two audience write tools are off unless enabled.
 
+## Quick install
+
+Claude Code, one line (replace the placeholder values with your own; see [Configuration](#configuration) for how to get them):
+
+```bash
+claude mcp add --env LINKEDIN_ADS_ACCESS_TOKEN=YOUR_ACCESS_TOKEN_HERE --transport stdio mcp-linkedin-ads -- npx -y mcp-linkedin-ads
+```
+
+An access token alone is enough to start. Add `--env LINKEDIN_ADS_ACCOUNT_ID=YOUR_ACCOUNT_ID` to set a default ad account. To refresh tokens automatically, also set `LINKEDIN_ADS_CLIENT_ID` and `LINKEDIN_ADS_CLIENT_SECRET`. The server uses LinkedIn API version 202607 and starts read-only; set `LINKEDIN_ADS_MCP_WRITE=true` to expose the two predictive-audience write tools.
+
+<details>
+<summary>Claude Desktop</summary>
+
+Add this to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS), then fully quit and restart Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "mcp-linkedin-ads": {
+      "command": "npx",
+      "args": ["-y", "mcp-linkedin-ads"],
+      "env": {
+        "LINKEDIN_ADS_ACCESS_TOKEN": "YOUR_ACCESS_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Codex CLI</summary>
+
+Add this to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.mcp-linkedin-ads]
+command = "npx"
+args = ["-y", "mcp-linkedin-ads"]
+
+[mcp_servers.mcp-linkedin-ads.env]
+LINKEDIN_ADS_ACCESS_TOKEN = "YOUR_ACCESS_TOKEN_HERE"
+```
+
+</details>
+
 **Features:**
 - **11 tools** (9 read, 2 write) -- production-tested
 - Multi-account management (multiple LinkedIn ad accounts)
