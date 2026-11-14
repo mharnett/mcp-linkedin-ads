@@ -20,6 +20,7 @@ import {
   validateCredentials,
 } from "./errors.js";
 import { buildConfig, type Config, type ClientConfig } from "./config.js";
+import { buildDateRange } from "./dateRange.js";
 import { tools } from "./tools.js";
 import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
@@ -310,9 +311,7 @@ class LinkedInAdsManager {
   // ============================================
 
   private buildDateRange(startDate: string, endDate: string): string {
-    const [sy, sm, sd] = startDate.split("-").map(Number);
-    const [ey, em, ed] = endDate.split("-").map(Number);
-    return `(start:(year:${sy},month:${sm},day:${sd}),end:(year:${ey},month:${em},day:${ed}))`;
+    return buildDateRange(startDate, endDate);
   }
 
   async getAnalytics(options: {
