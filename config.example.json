@@ -6,8 +6,7 @@
     "scope": "r_ads,rw_ads,r_ads_reporting,rw_dmp_segments,w_member_social,r_organization_social,w_organization_social"
   },
   "api": {
-    "base_url": "https://api.linkedin.com/rest",
-    "version": "202607"
+    "base_url": "https://api.linkedin.com/rest"
   },
   "clients": {
     "default": {

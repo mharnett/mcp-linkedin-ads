@@ -148,8 +148,9 @@ Requirements and behaviour (verified live 2026-11-05):
 
 - The token needs the `rw_dmp_segments` scope (included in `config.example.json`).
   LinkedIn grants DMP write access per developer app.
-- These calls use `LinkedIn-Version: 202607` regardless of `api.version`; the
-  audience endpoints 404 at 202604.
+- Every call the server makes, these included, sends `LinkedIn-Version: 202607`,
+  set only in `src/config.ts`; an `api.version` in `config.json` is ignored with a
+  warning. The audience endpoints 404 at 202604.
 - `desired_audience_count` and at least one `urn:li:geo:` location are required on create.
 - Freshly created audiences 404 their POST/PATCH for a few seconds, and reads lag
   writes; the tools retry 404s and re-read before reporting a mismatch.

@@ -19,8 +19,8 @@ import {
   classifyError,
   validateCredentials,
 } from "./errors.js";
-import { buildConfig, type Config, type ClientConfig } from "./config.js";
-import { buildDateRange } from "./dateRange.js";
+import { buildConfig, restliHeaders, type Config, type ClientConfig } from "./config.js";
+import { buildAnalyticsUrl } from "./analytics.js";
 import { tools } from "./tools.js";
 import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
@@ -228,11 +228,7 @@ class LinkedInAdsManager {
     return withResilience(async () => {
       const resp = await fetch(url, {
         method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "LinkedIn-Version": this.config.api.version,
-          "X-Restli-Protocol-Version": "2.0.0",
-        },
+        headers: restliHeaders(token),
         signal: AbortSignal.timeout(30_000),
       });
 
@@ -253,11 +249,7 @@ class LinkedInAdsManager {
     return withResilience(async () => {
       const resp = await fetch(fullUrl, {
         method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "LinkedIn-Version": this.config.api.version,
-          "X-Restli-Protocol-Version": "2.0.0",
-        },
+        headers: restliHeaders(token),
         signal: AbortSignal.timeout(30_000),
       });
 
@@ -310,10 +302,6 @@ class LinkedInAdsManager {
   // ANALYTICS / REPORTING
   // ============================================
 
-  private buildDateRange(startDate: string, endDate: string): string {
-    return buildDateRange(startDate, endDate);
-  }
-
   async getAnalytics(options: {
     accountId: string;
     startDate: string;
@@ -324,44 +312,8 @@ class LinkedInAdsManager {
     campaignIds?: string[];
     campaignGroupIds?: string[];
   }): Promise<any> {
-    const dateRange = this.buildDateRange(options.startDate, options.endDate);
-    const granularity = options.timeGranularity || "ALL";
-    const fields = options.fields || [
-      "impressions", "clicks", "costInLocalCurrency", "landingPageClicks",
-      "oneClickLeads", "oneClickLeadFormOpens",
-      "externalWebsiteConversions", "externalWebsitePostClickConversions",
-      "totalEngagements", "videoViews", "videoCompletions",
-      "approximateMemberReach",
-      "dateRange", "pivotValues",
-    ];
-
-    // LinkedIn Restli quirk (verified against /rest/adAnalytics with
-    // LinkedIn-Version 202602): dateRange value must use literal
-    // parens/colons/commas — percent-encoding them returns 400 PARAM_INVALID.
-    // The URN inside accounts=List(...) MUST be percent-encoded, but the
-    // List() wrapper itself stays literal. fields uses literal commas.
-    const accountUrn = encodeURIComponent(`urn:li:sponsoredAccount:${options.accountId}`);
-    let url = `${this.config.api.base_url}/adAnalytics?q=analytics` +
-      `&pivot=${options.pivot}` +
-      `&dateRange=${dateRange}` +
-      `&timeGranularity=${granularity}` +
-      `&accounts=List(${accountUrn})` +
-      `&fields=${fields.join(",")}`;
-
-    if (options.campaignIds && options.campaignIds.length > 0) {
-      const urns = options.campaignIds
-        .map(id => encodeURIComponent(`urn:li:sponsoredCampaign:${id}`))
-        .join(",");
-      url += `&campaigns=List(${urns})`;
-    }
-
-    if (options.campaignGroupIds && options.campaignGroupIds.length > 0) {
-      const urns = options.campaignGroupIds
-        .map(id => encodeURIComponent(`urn:li:sponsoredCampaignGroup:${id}`))
-        .join(",");
-      url += `&campaignGroups=List(${urns})`;
-    }
-
+    // Request shape (literal dateRange, encoded URNs) lives in src/analytics.ts.
+    const url = buildAnalyticsUrl(this.config.api.base_url, options);
     const raw = await this.apiGetRaw(url);
     return enrichAnalyticsResponse(raw);
   }
