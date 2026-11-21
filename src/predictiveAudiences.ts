@@ -15,7 +15,7 @@
  * retried parent POST would create a second segment.
  */
 
-import { DEFAULT_API_VERSION } from "./config.js";
+import { DEFAULT_API_VERSION, restliHeaders } from "./config.js";
 
 export const PA_VERSION = DEFAULT_API_VERSION;
 export const LOCATIONS_FACET = "urn:li:adTargetingFacet:locations";
@@ -197,12 +197,7 @@ export class PredictiveAudienceClient {
 
   private async call(method: string, path: string, body?: unknown, extraHeaders: Record<string, string> = {}) {
     const token = await this.getToken();
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${token}`,
-      "LinkedIn-Version": PA_VERSION,
-      "X-Restli-Protocol-Version": "2.0.0",
-      ...extraHeaders,
-    };
+    const headers: Record<string, string> = { ...restliHeaders(token), ...extraHeaders };
     if (body !== undefined) headers["Content-Type"] = "application/json";
     return this.fetchFn(`${this.baseUrl}${path}`, {
       method,

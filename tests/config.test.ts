@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtempSync, writeFileSync, rmSync, copyFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { buildConfig } from "../src/config.js";
+import { buildConfig, DEFAULT_API_VERSION } from "../src/config.js";
 
 const EXAMPLE = join(__dirname, "..", "config.example.json");
 let dir: string;
@@ -92,7 +92,10 @@ describe("buildConfig: config.json present", () => {
       examplePath: EXAMPLE,
       env: { LINKEDIN_ADS_CLIENT_ID: "env-id", LINKEDIN_ADS_ACCESS_TOKEN: "token-0123456789" },
     });
-    expect(cfg.api.version).toBe("209901");
+    // config.json wins for everything except the LinkedIn-Version, which only
+    // src/config.ts sets (tests/api-version.test.ts).
+    expect(cfg.api.version).toBe(DEFAULT_API_VERSION);
+    expect(cfg.api.base_url).toBe("https://api.example/rest");
     expect(cfg.oauth.client_id).toBe("file-id");
     expect(Object.keys(cfg.clients)).toEqual(["acme"]);
   });
