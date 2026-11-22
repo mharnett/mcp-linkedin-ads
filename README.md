@@ -302,7 +302,7 @@ Contributions welcome! Please:
 
 ## Built By
 
-**[Mark Harnett](https://www.linkedin.com/in/markharnett/)** — Demand generation leader and paid media practitioner building AI-powered ad management tools. This server was born from managing LinkedIn campaigns across multiple clients and wanting Claude to handle campaign ops, performance analysis, and bulk creative updates autonomously.
+**[Mark Harnett](https://www.linkedin.com/in/harnett/)** — Demand generation leader and paid media practitioner building AI-powered ad management tools. This server was born from managing LinkedIn campaigns across multiple clients and wanting Claude to handle campaign ops, performance analysis, and bulk creative updates autonomously.
 
 Built with production workloads in mind: resilient API calls (circuit breakers, retry with backoff, response truncation), accurate CTR calculation (landing page clicks, not total clicks), and multi-account support.
 
