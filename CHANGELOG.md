@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.2.1...mcp-linkedin-ads-v1.2.2) (2026-11-22)
+
+
+### Bug Fixes
+
+* send one LinkedIn-Version from src/config.ts on every request path ([#26](https://github.com/mharnett/mcp-linkedin-ads/issues/26)) ([2b4aba5](https://github.com/mharnett/mcp-linkedin-ads/commit/2b4aba59863a1a227c4988b3581405989f6d1cdc))
+* send pino logs to stderr under piped stdio ([#29](https://github.com/mharnett/mcp-linkedin-ads/issues/29)) ([80da618](https://github.com/mharnett/mcp-linkedin-ads/commit/80da6184086722dc21e4dc30d69fcc4ebb3a4d9a))
+
 ## [1.2.1](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.2.0...mcp-linkedin-ads-v1.2.1) (2026-11-14)
 
 
