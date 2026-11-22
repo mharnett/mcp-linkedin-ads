@@ -6,36 +6,58 @@
     "url": "https://github.com/mharnett/mcp-linkedin-ads",
     "source": "github"
   },
-  "version": "1.0.2",
+  "version": "1.2.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "mcp-linkedin-ads",
-      "version": "1.0.2",
+      "version": "1.2.2",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
-          "name": "LINKEDIN_CLIENT_ID",
-          "description": "LinkedIn OAuth app client ID",
+          "name": "LINKEDIN_ADS_ACCESS_TOKEN",
+          "description": "LinkedIn OAuth access token. Enough on its own to start.",
           "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "LINKEDIN_ADS_REFRESH_TOKEN",
+          "description": "LinkedIn OAuth refresh token. With LINKEDIN_ADS_CLIENT_ID and LINKEDIN_ADS_CLIENT_SECRET, the server renews the access token itself.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "LINKEDIN_ADS_CLIENT_ID",
+          "description": "LinkedIn app client ID. Needed only with a refresh token.",
+          "isRequired": false,
           "isSecret": false,
           "format": "string"
         },
         {
-          "name": "LINKEDIN_CLIENT_SECRET",
-          "description": "LinkedIn OAuth app client secret",
-          "isRequired": true,
+          "name": "LINKEDIN_ADS_CLIENT_SECRET",
+          "description": "LinkedIn app client secret. Needed only with a refresh token.",
+          "isRequired": false,
           "isSecret": true,
           "format": "string"
         },
         {
-          "name": "LINKEDIN_ACCESS_TOKEN",
-          "description": "LinkedIn OAuth access token",
-          "isRequired": true,
-          "isSecret": true,
+          "name": "LINKEDIN_ADS_ACCOUNT_ID",
+          "description": "Default LinkedIn ad account ID, used when a tool call names none.",
+          "isRequired": false,
+          "isSecret": false,
           "format": "string"
+        },
+        {
+          "name": "LINKEDIN_ADS_MCP_WRITE",
+          "description": "Set to true to expose the predictive-audience write tools. Read-only by default.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "boolean",
+          "default": "false"
         }
       ]
     }
