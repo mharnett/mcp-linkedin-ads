@@ -6,7 +6,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, realpathSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
@@ -358,7 +358,10 @@ class LinkedInAdsManager {
 const config = loadConfig();
 const adsManager = new LinkedInAdsManager(config);
 
-const server = new Server(
+// Exported so tests can connect an in-memory transport and drive the real
+// tools/list and tools/call handlers registered below. main() is the only
+// production caller of server.connect().
+export const server = new Server(
   {
     name: __cliPkg.name,
     version: __cliPkg.version,
@@ -589,4 +592,20 @@ process.on("unhandledRejection", (reason) => {
   console.error("[error] Unhandled promise rejection:", reason);
 });
 
-main().catch((err) => logger.error({ err }, "Server failed to start"));
+// Only auto-start the server when this module is executed directly (as the
+// CLI entrypoint, including through the npx/bin symlink), not when a test
+// imports it. Comparing the resolved module path to process.argv[1] is the
+// ESM equivalent of the CommonJS `require.main === module` guard.
+function isMainModule(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return fileURLToPath(import.meta.url) === realpathSync(entry);
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
+  main().catch((err) => logger.error({ err }, "Server failed to start"));
+}
