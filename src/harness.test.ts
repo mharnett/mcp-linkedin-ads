@@ -14,7 +14,9 @@ registerMcpTests({
   hasCredentials: false,
   hasResilience: true,
   hasPlatform: false,
-  requiredEnvVars: ["LINKEDIN_ADS_REFRESH_TOKEN"],
+  // A refresh token starts the server only with the OAuth client pair
+  // (src/config.ts buildConfig), the same trio run-mcp.sh exports.
+  requiredEnvVars: ["LINKEDIN_ADS_REFRESH_TOKEN", "LINKEDIN_ADS_CLIENT_ID", "LINKEDIN_ADS_CLIENT_SECRET"],
   envPrefix: "LINKEDIN_ADS_",
   sourceLintIgnore: ["index.ts"], // index.ts uses execFileSync for Keychain + new URL for path resolution
 });
