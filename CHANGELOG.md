@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.2.2...mcp-linkedin-ads-v1.2.3) (2026-11-25)
+
+
+### Bug Fixes
+
+* **server.json:** list the LINKEDIN_ADS_* env vars the server reads ([#36](https://github.com/mharnett/mcp-linkedin-ads/issues/36)) ([da92002](https://github.com/mharnett/mcp-linkedin-ads/commit/da92002dd5756b9dd158f93e8a6be0bf2e083e61))
+
 ## [1.2.2](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.2.1...mcp-linkedin-ads-v1.2.2) (2026-11-22)
 
 
