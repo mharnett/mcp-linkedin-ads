@@ -25,6 +25,7 @@ import { tools } from "./tools.js";
 import { filterTools, assertWriteAllowed, isWriteEnabled } from "./writeGate.js";
 import { withResilience, safeResponse, logger } from "./resilience.js";
 import { PredictiveAudienceClient } from "./predictiveAudiences.js";
+import { persistSecretToKeychain } from "./keychain.js";
 import v8 from "v8";
 
 // CLI package info
@@ -201,13 +202,11 @@ class LinkedInAdsManager {
     if (data.refresh_token && data.refresh_token !== this.refreshToken) {
       this.refreshToken = data.refresh_token;
       if (process.platform === "darwin") {
-        try {
-          const { execFileSync } = await import("child_process");
-          try { execFileSync("security", ["delete-generic-password", "-a", "linkedin-ads-mcp", "-s", "LINKEDIN_ADS_REFRESH_TOKEN"], { stdio: "ignore" }); } catch { /* may not exist yet */ }
-          execFileSync("security", ["add-generic-password", "-a", "linkedin-ads-mcp", "-s", "LINKEDIN_ADS_REFRESH_TOKEN", "-w", data.refresh_token]);
+        // Single atomic upsert (-U), secret on stdin. See keychain.ts.
+        if (persistSecretToKeychain("LINKEDIN_ADS_REFRESH_TOKEN", data.refresh_token)) {
           logger.info("Rotated refresh token persisted to Keychain");
-        } catch (err) {
-          logger.warn({ err }, "Failed to persist rotated refresh token to Keychain");
+        } else {
+          logger.warn("Failed to persist rotated refresh token to Keychain. This session will use it; the stored entry is unchanged.");
         }
       } else {
         console.error("[token] Rotated refresh token received but Keychain not available (non-macOS). Token will be used for this session only.");
