@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.4](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.2.3...mcp-linkedin-ads-v1.2.4) (2026-11-26)
+
+
+### Bug Fixes
+
+* keep the rotated refresh token out of arguments and logs ([#45](https://github.com/mharnett/mcp-linkedin-ads/issues/45)) ([7df8752](https://github.com/mharnett/mcp-linkedin-ads/commit/7df8752457f59e4d7b9b8b9c3b81e44f741bb2c3))
+* token helper listens on loopback only and prints no token ([#44](https://github.com/mharnett/mcp-linkedin-ads/issues/44)) ([d6cbf79](https://github.com/mharnett/mcp-linkedin-ads/commit/d6cbf7932ca4287da4d6efbc47ee7463d97b2be0))
+
 ## [1.2.3](https://github.com/mharnett/mcp-linkedin-ads/compare/mcp-linkedin-ads-v1.2.2...mcp-linkedin-ads-v1.2.3) (2026-11-25)
 
 
