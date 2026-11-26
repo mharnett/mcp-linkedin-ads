@@ -14,34 +14,35 @@
  *       linkedin-client-id and linkedin-client-secret entries)
  *   3. Run: node get-refresh-token.cjs
  *   4. Sign in via browser (log in as the account that owns the app)
- *   5. Store tokens in Keychain:
- *      security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w "<token>" -U
+ *   5. No token is printed. Each is saved to the macOS Keychain (where
+ *      run-mcp.sh reads it), or, off macOS or if that fails, to a file only
+ *      your user can read. The script says which, and how to load it.
  */
 
 const https = require("https");
 const { execSync, execFileSync } = require("child_process");
 const { tmpdir } = require("os");
 const { join } = require("path");
-const { unlinkSync } = require("fs");
+const { readFileSync, unlinkSync } = require("fs");
+const { storeToken, describeStored, describeOAuthError, describeFailure, listenLoopback } = require("./token-store.cjs");
 
 const CLIENT_ID = process.env.LINKEDIN_ADS_CLIENT_ID;
 const CLIENT_SECRET = process.env.LINKEDIN_ADS_CLIENT_SECRET;
 const PORT = 8080;
 const REDIRECT_URI = `https://localhost:${PORT}/callback`;
+const AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
+const TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken";
+const KEYCHAIN_ACCOUNT = "linkedin-ads-mcp";
+const ACCESS_ENTRY = { service: "linkedin-access-token", envVar: "LINKEDIN_ADS_ACCESS_TOKEN" };
+const REFRESH_ENTRY = { service: "LINKEDIN_ADS_REFRESH_TOKEN", envVar: "LINKEDIN_ADS_REFRESH_TOKEN" };
+
 // Read scopes from config.json so this script stays in lockstep with what the
 // MCP advertises at runtime. Scopes are comma-separated in config; LinkedIn's
 // auth endpoint wants a space-separated list.
-const { readFileSync: _readFileSync } = require("fs");
-const { join: _join } = require("path");
-const _cfg = JSON.parse(_readFileSync(_join(__dirname, "config.json"), "utf8"));
-const SCOPE = ((_cfg.oauth && _cfg.oauth.scope) || "r_ads,r_ads_reporting")
-  .split(",").map(s => s.trim()).filter(Boolean).join(" ");
-const AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
-const TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken";
-
-if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.error("Set LINKEDIN_ADS_CLIENT_ID and LINKEDIN_ADS_CLIENT_SECRET env vars first");
-  process.exit(1);
+function readScope() {
+  const cfg = JSON.parse(readFileSync(join(__dirname, "config.json"), "utf8"));
+  return ((cfg.oauth && cfg.oauth.scope) || "r_ads,r_ads_reporting")
+    .split(",").map(s => s.trim()).filter(Boolean).join(" ");
 }
 
 // Generate self-signed cert for local HTTPS callback server
@@ -54,112 +55,121 @@ function generateSelfSignedCert() {
     "-days", "1", "-nodes",
     "-subj", "/CN=localhost",
   ], { stdio: "ignore" });
-  return { certPath, keyPath };
+  const cert = readFileSync(certPath);
+  const key = readFileSync(keyPath);
+  // Both are in memory now; nothing needs the files.
+  for (const p of [certPath, keyPath]) {
+    try { unlinkSync(p); } catch { /* ignore */ }
+  }
+  return { cert, key };
 }
 
-const state = Math.random().toString(36).substring(2);
-const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPE)}&state=${state}`;
+function saveToken(entry, secret, deps) {
+  const result = deps.store({ account: KEYCHAIN_ACCOUNT, service: entry.service, secret });
+  deps.log(describeStored(result, { account: KEYCHAIN_ACCOUNT, ...entry }));
+  return Boolean(result.where);
+}
 
-const { certPath, keyPath } = generateSelfSignedCert();
-const cert = require("fs").readFileSync(certPath);
-const key = require("fs").readFileSync(keyPath);
-
-const server = https.createServer({ cert, key }, async (req, res) => {
-  if (!req.url.startsWith("/callback")) return;
-
-  const url = new URL(req.url, `https://localhost:${PORT}`);
-  const code = url.searchParams.get("code");
-  const returnedState = url.searchParams.get("state");
-
-  if (returnedState !== state) {
-    res.writeHead(400);
-    res.end("State mismatch -- possible CSRF attack");
-    return;
-  }
-
-  if (!code) {
-    const error = url.searchParams.get("error_description") || url.searchParams.get("error") || "No code received";
-    res.writeHead(400);
-    res.end(`Error: ${error}`);
-    return;
-  }
-
+async function exchangeCode(code, { clientId, clientSecret, deps }) {
   const params = new URLSearchParams({
     grant_type: "authorization_code",
     code,
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
+    client_id: clientId,
+    client_secret: clientSecret,
     redirect_uri: REDIRECT_URI,
   });
 
-  try {
-    const resp = await fetch(TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString(),
-    });
+  const resp = await deps.fetch(TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
+  });
+  const data = await resp.json();
 
-    const data = await resp.json();
-
-    if (data.access_token) {
-      console.log("\n=== SUCCESS ===");
-      console.log("Access Token:", data.access_token.substring(0, 40) + "...");
-      console.log("Expires in:", data.expires_in, "seconds");
-
-      // Auto-store access token in Keychain
-      if (process.platform === "darwin") {
-        try {
-          try { execFileSync("security", ["delete-generic-password", "-a", "linkedin-ads-mcp", "-s", "linkedin-access-token"], { stdio: "ignore" }); } catch { /* may not exist */ }
-          execFileSync("security", ["add-generic-password", "-a", "linkedin-ads-mcp", "-s", "linkedin-access-token", "-w", data.access_token]);
-          console.log("Access token stored in Keychain (service: linkedin-access-token)");
-        } catch (err) {
-          console.error("Failed to store access token in Keychain:", err.message);
-        }
-      }
-
-      if (data.refresh_token) {
-        console.log("Refresh Token:", data.refresh_token.substring(0, 20) + "...");
-        if (process.platform === "darwin") {
-          try {
-            try { execFileSync("security", ["delete-generic-password", "-a", "linkedin-ads-mcp", "-s", "LINKEDIN_ADS_REFRESH_TOKEN"], { stdio: "ignore" }); } catch { /* may not exist */ }
-            execFileSync("security", ["add-generic-password", "-a", "linkedin-ads-mcp", "-s", "LINKEDIN_ADS_REFRESH_TOKEN", "-w", data.refresh_token]);
-            console.log("Refresh token stored in Keychain (account: linkedin-ads-mcp, service: LINKEDIN_ADS_REFRESH_TOKEN)");
-          } catch (err) {
-            console.error("Failed to store refresh token in Keychain:", err.message);
-            console.log("Store manually:");
-            console.log(`security add-generic-password -a linkedin-ads-mcp -s LINKEDIN_ADS_REFRESH_TOKEN -w "${data.refresh_token}" -U`);
-          }
-        } else {
-          console.log("\nStore refresh token in your environment:");
-          console.log(`export LINKEDIN_ADS_REFRESH_TOKEN="${data.refresh_token}"`);
-        }
-      } else {
-        console.log("\nNo refresh token returned (LinkedIn requires Marketing Developer Platform approval).");
-        console.log("The access token (60-day TTL) was stored. Re-run this script to renew.");
-      }
-
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.end("<h1>Success!</h1><p>Tokens stored. You can close this tab.</p>");
-    } else {
-      console.error("Unexpected response:", data);
-      res.writeHead(500);
-      res.end("Error: " + JSON.stringify(data));
-    }
-  } catch (err) {
-    console.error("Token exchange failed:", err);
-    res.writeHead(500);
-    res.end("Error: " + err.message);
+  if (!data.access_token) {
+    const why = describeOAuthError(data);
+    deps.log(`No access token in response (${why})`);
+    return { ok: false, text: `Error: ${why}` };
   }
 
-  // Cleanup temp cert files
-  try { unlinkSync(certPath); } catch { /* ignore */ }
-  try { unlinkSync(keyPath); } catch { /* ignore */ }
+  deps.log("\n=== Signed in ===");
+  deps.log(`Access token expires in: ${data.expires_in} seconds`);
+  let ok = saveToken(ACCESS_ENTRY, data.access_token, deps);
 
-  setTimeout(() => process.exit(0), 1000);
-});
+  if (data.refresh_token) {
+    deps.log("");
+    ok = saveToken(REFRESH_ENTRY, data.refresh_token, deps) && ok;
+  } else {
+    deps.log("\nNo refresh token returned (LinkedIn requires Marketing Developer Platform approval).");
+    deps.log("The access token has a 60-day lifetime. Re-run this script to renew.");
+  }
 
-server.listen(PORT, () => {
-  console.log(`HTTPS callback server listening on port ${PORT}`);
+  return ok
+    ? { ok, text: "Success. Tokens saved. You can close this tab." }
+    : { ok, text: "A token could not be saved. See the terminal." };
+}
+
+function startCallbackServer({ port, createServer, state, clientId, clientSecret, deps }) {
+  const handler = async (req, res) => {
+    if (!req.url.startsWith("/callback")) return;
+
+    const url = new URL(req.url, `https://localhost:${PORT}`);
+    const code = url.searchParams.get("code");
+    const returnedState = url.searchParams.get("state");
+
+    if (returnedState !== state) {
+      res.writeHead(400);
+      res.end("State mismatch -- possible CSRF attack");
+      return;
+    }
+
+    if (!code) {
+      const error = url.searchParams.get("error_description") || url.searchParams.get("error") || "No code received";
+      res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(`Error: ${error}`);
+      return;
+    }
+
+    let outcome;
+    try {
+      outcome = await exchangeCode(code, { clientId, clientSecret, deps });
+    } catch (err) {
+      const why = describeFailure(err);
+      deps.log(`Token exchange failed: ${why}`);
+      outcome = { ok: false, text: `Error: ${why}` };
+    }
+    res.writeHead(outcome.ok ? 200 : 500, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end(outcome.text, () => deps.done(outcome.ok ? 0 : 1));
+  };
+  return listenLoopback(() => createServer(handler), port);
+}
+
+async function main() {
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    console.error("Set LINKEDIN_ADS_CLIENT_ID and LINKEDIN_ADS_CLIENT_SECRET env vars first");
+    process.exit(1);
+  }
+
+  const scope = readScope();
+  const state = Math.random().toString(36).substring(2);
+  const authUrl = `${AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(scope)}&state=${state}`;
+  const tls = generateSelfSignedCert();
+
+  await startCallbackServer({
+    port: PORT,
+    createServer: (handler) => https.createServer(tls, handler),
+    state,
+    clientId: CLIENT_ID,
+    clientSecret: CLIENT_SECRET,
+    deps: {
+      fetch,
+      store: storeToken,
+      log: console.log,
+      done: (exitCode) => setTimeout(() => process.exit(exitCode), 1000),
+    },
+  });
+
+  console.log(`HTTPS callback server listening on loopback port ${PORT}`);
   console.log("Opening browser for LinkedIn sign-in (log in as the account that owns the app)...");
   console.log("Auth URL:", authUrl);
   try {
@@ -167,4 +177,13 @@ server.listen(PORT, () => {
   } catch {
     console.log("Open the URL above in your browser.");
   }
-});
+}
+
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(`Could not start: ${err.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = { startCallbackServer };
